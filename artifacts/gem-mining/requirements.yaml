@@ -1,0 +1,23 @@
+packages:
+  "framer-motion": "For mystical pulse and hover animations"
+  "recharts": "For displaying admin stats and data"
+  "date-fns": "For formatting history dates"
+  "clsx": "For conditional tailwind classes"
+  "tailwind-merge": "For conditional tailwind classes"
+  "sonner": "For toast notifications"
+
+images:
+  - path: "artifacts/gem-mining/public/images/hero-bg.png"
+    description: "Dark fantasy mystical cavern with glowing purple crystals and gold veins"
+    aspect_ratio: "16:9"
+  - path: "artifacts/gem-mining/public/images/logo-icon.png"
+    description: "Mystical gold gem floating with purple aura, dark background"
+    aspect_ratio: "1:1"
+  - path: "artifacts/gem-mining/public/images/mining-orb.png"
+    description: "Glowing magical sphere of gold energy and purple lightning, fantasy style"
+    aspect_ratio: "1:1"
+
+notes:
+  - Global fetch interceptor handles injecting the Bearer token from localStorage
+  - Unauthenticated 401s automatically redirect to /login
+  - Hooks are imported directly from @workspace/api-client-react per instructions

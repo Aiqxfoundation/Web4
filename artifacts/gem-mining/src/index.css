@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --font-sans: 'Inter', sans-serif;
+  
+  --radius: var(--radius);
+}
+
+:root {
+  --background: 220 14% 6%;
+  --foreground: 220 9% 92%;
+  --card: 220 12% 10%;
+  --card-foreground: 220 9% 92%;
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 5%;
+  --secondary: 220 12% 18%;
+  --secondary-foreground: 220 9% 70%;
+  --muted: 220 12% 14%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 250 60% 60%;
+  --accent-foreground: 220 9% 95%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 12% 16%;
+  --input: 220 12% 13%;
+  --ring: 25 95% 53%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased min-h-screen;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card border border-border;
+  }
+  
+  .stat-card {
+    @apply bg-card border border-border rounded-[var(--radius)] p-6;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted rounded-full;
+  }
+
+  .defi-table {
+    @apply w-full text-left border-collapse;
+  }
+
+  .defi-table th {
+    @apply px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border;
+  }
+
+  .defi-table td {
+    @apply px-4 py-4 text-sm border-b border-border/50;
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+}

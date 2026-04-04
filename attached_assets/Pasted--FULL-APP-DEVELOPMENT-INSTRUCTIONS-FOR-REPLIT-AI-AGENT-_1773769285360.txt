@@ -1,0 +1,388 @@
+📄 FULL APP DEVELOPMENT INSTRUCTIONS (FOR REPLIT AI AGENT)
+
+1. Project Overview
+
+Build a mobile/web application with:
+
+Simple and clean UI
+
+Easy-to-use interface
+
+Crypto-style mining + conversion system
+
+Fantasy treasure theme
+
+
+The app includes:
+
+User authentication
+
+USDT deposits (manual)
+
+Gem mining system
+
+Conversion system (Gems → ETR / USDT)
+
+Referral system
+
+Admin panel
+
+
+
+---
+
+2. Authentication System
+
+Signup Fields:
+
+Username (unique)
+
+Password
+
+Confirm Password
+
+Recovery Question
+
+Recovery Answer
+
+
+Rules:
+
+Store passwords using hashing (bcrypt)
+
+Do NOT store plain text passwords
+
+Prevent duplicate usernames
+
+Recovery system:
+
+User answers recovery question
+
+Can reset password
+
+
+
+
+---
+
+3. User Flow
+
+1. User signs up
+
+
+2. User logs in
+
+
+3. User deposits USDT
+
+
+4. Admin manually approves deposit
+
+
+5. After approval → account becomes ACTIVE
+
+
+6. User starts mining Gems
+
+
+
+
+---
+
+4. Deposit System
+
+Currency: USDT only
+
+Show clear instructions (wallet address, network, etc.)
+
+Deposit status: Pending → Approved (by Admin)
+
+Time: ~2 hours manual confirmation
+
+
+
+---
+
+5. Mining System (Core Logic)
+
+Rule:
+
+$100 deposit → 10,000,000 Gems in 6 months
+
+
+Calculation:
+
+6 months ≈ 180 days
+
+Daily Gems ≈ 55,555
+
+
+Logic:
+
+Mining starts ONLY after deposit approval
+
+Gems accumulate over time (timer-based or daily claim)
+
+
+
+---
+
+6. Conversion System
+
+Conversion Rules:
+
+10,000,000 Gems = 100 ETR
+
+100 ETR = $350
+
+
+User Options:
+
+Convert Gems → ETR
+
+Convert Gems → USDT
+
+
+
+---
+
+7. Dynamic Conversion Rule (Anti-Inflation)
+
+When total ETR swapped > 1,000,000:
+
+
+Change conversion rate:
+
+Before: 1 ETR = 100 Gems
+
+After: 1 ETR = 200 Gems
+
+
+This rule must be:
+
+Automatically applied
+
+Clearly shown in UI
+
+
+
+---
+
+8. ETR Token System
+
+Total Supply: 21,000,000 ETR
+
+
+Distribution:
+
+60% → Users (via conversion)
+
+40% → Team + Liquidity
+
+
+Rules:
+
+ETR is transferable between users
+
+Withdrawal of ETR is disabled initially
+
+Enabled later after project launch
+
+
+
+---
+
+9. Referral System
+
+Structure:
+
+2 Levels only
+
+
+Rewards:
+
+Level 1 (Direct): 15% Gems
+
+Level 2 (Indirect): 5% Gems
+
+
+Rules:
+
+Rewards based on mining activity
+
+Detect fake referrals
+
+Auto-ban suspicious accounts
+
+
+
+---
+
+10. Withdrawal System
+
+Manual approval by Admin
+
+Status:
+
+Pending
+
+Approved
+
+Rejected
+
+
+Time: up to 2 hours
+
+
+
+---
+
+11. Admin Panel Features
+
+Admin must be able to:
+
+Approve/reject deposits
+
+Approve/reject withdrawals
+
+View all users
+
+Ban users
+
+Track:
+
+Total Gems mined
+
+Total ETR converted
+
+Total supply used
+
+
+
+
+---
+
+12. UI / UX Design
+
+Theme: Fantasy Treasure Hunt
+
+Design Elements:
+
+Dark background
+
+Gold + glowing colors
+
+Gems as crystals
+
+Mining animation (treasure chest / digging)
+
+Dashboard like a treasure map
+
+
+
+---
+
+13. Pages Required
+
+Login / Signup
+
+Dashboard
+
+Deposit
+
+Mining
+
+Convert
+
+Wallet
+
+Withdraw
+
+Referral
+
+Profile (Recovery settings)
+
+
+
+---
+
+14. Security Rules
+
+Use JWT authentication
+
+Hash passwords
+
+Validate all inputs
+
+Prevent multiple fake accounts
+
+Rate limit requests
+
+
+
+---
+
+15. Tech Stack (Recommended)
+
+Frontend: Flutter or React
+
+Backend: Node.js (Express)
+
+Database: MongoDB / Firebase
+
+Admin Panel: Web dashboard
+
+
+
+---
+
+16. Important Disclaimer (MUST INCLUDE)
+
+Clearly explain:
+
+Rewards system
+
+Conversion logic
+
+Manual approvals
+
+Risks involved
+
+
+
+
+---
+
+📌 FINAL (YOUR IDEA WRITTEN CLEARLY IN ENGLISH)
+
+Create an application where users sign up using a username, password, confirm password, and a recovery question with an answer.
+
+After creating an account, users must deposit USDT to activate their account. Deposits are manually approved by the admin within approximately 2 hours.
+
+Once the account is activated, users can start mining Gems. For every $100 deposit, the user should receive a total of 10,000,000 Gems over 6 months.
+
+Users can convert Gems into ETR tokens or USDT at any time. The conversion rate is:
+
+10,000,000 Gems = 100 ETR
+
+100 ETR = $350
+
+
+ETR tokens are transferable between users but cannot be withdrawn initially.
+
+The total supply of ETR is 21 million. 60% will be distributed to users through conversion, and 40% will be allocated for the team and liquidity.
+
+The system includes a referral program:
+
+15% reward from direct referrals
+
+5% reward from indirect referrals (2 levels only)
+
+
+If a user creates fake referrals, their account will be banned immediately.
+
+There is also a dynamic rule: when more than 1 million ETR tokens are swapped, the conversion rate will change, increasing the cost of ETR in Gems.
+
+The application should have a fantasy treasure-themed interface with a simple and clean design.
+
+All deposits and withdrawals are manually handled by the admin panel.

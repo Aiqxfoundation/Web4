@@ -1,0 +1,898 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: ETR Gem Mining API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: deposits
+    description: Deposit operations
+  - name: mining
+    description: Mining operations
+  - name: conversions
+    description: Conversion operations
+  - name: wallet
+    description: Wallet operations
+  - name: referrals
+    description: Referral operations
+  - name: withdrawals
+    description: Withdrawal operations
+  - name: admin
+    description: Admin operations
+  - name: system
+    description: System-wide data
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/recovery:
+    post:
+      operationId: recoverPassword
+      tags: [auth]
+      summary: Recover password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoverPasswordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deposits:
+    get:
+      operationId: getMyDeposits
+      tags: [deposits]
+      summary: Get my deposits
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deposit"
+    post:
+      operationId: createDeposit
+      tags: [deposits]
+      summary: Create a deposit request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepositRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deposit"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /mining/status:
+    get:
+      operationId: getMiningStatus
+      tags: [mining]
+      summary: Get current mining status
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MiningStatus"
+
+  /mining/claim:
+    post:
+      operationId: claimGems
+      tags: [mining]
+      summary: Claim accumulated gems
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /conversions:
+    get:
+      operationId: getMyConversions
+      tags: [conversions]
+      summary: Get my conversion history
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversion"
+    post:
+      operationId: createConversion
+      tags: [conversions]
+      summary: Convert gems to ETR or USDT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversionRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversion"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Get wallet balances
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletBalance"
+
+  /wallet/transfer:
+    post:
+      operationId: transferEtr
+      tags: [wallet]
+      summary: Transfer ETR to another user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferEtrRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /referrals:
+    get:
+      operationId: getMyReferrals
+      tags: [referrals]
+      summary: Get my referral info and downline
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralInfo"
+
+  /withdrawals:
+    get:
+      operationId: getMyWithdrawals
+      tags: [withdrawals]
+      summary: Get my withdrawal requests
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Withdrawal"
+    post:
+      operationId: createWithdrawal
+      tags: [withdrawals]
+      summary: Request a withdrawal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWithdrawalRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Withdrawal"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /system/stats:
+    get:
+      operationId: getSystemStats
+      tags: [system]
+      summary: Get public system stats (total ETR swapped, conversion rate)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStats"
+
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: Get all users
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{userId}/ban:
+    post:
+      operationId: adminBanUser
+      tags: [admin]
+      summary: Ban or unban a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUserRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/deposits:
+    get:
+      operationId: adminGetDeposits
+      tags: [admin]
+      summary: Get all deposits
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDeposit"
+
+  /admin/deposits/{depositId}/approve:
+    post:
+      operationId: adminApproveDeposit
+      tags: [admin]
+      summary: Approve a deposit
+      parameters:
+        - name: depositId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/deposits/{depositId}/reject:
+    post:
+      operationId: adminRejectDeposit
+      tags: [admin]
+      summary: Reject a deposit
+      parameters:
+        - name: depositId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/withdrawals:
+    get:
+      operationId: adminGetWithdrawals
+      tags: [admin]
+      summary: Get all withdrawal requests
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminWithdrawal"
+
+  /admin/withdrawals/{withdrawalId}/approve:
+    post:
+      operationId: adminApproveWithdrawal
+      tags: [admin]
+      summary: Approve a withdrawal
+      parameters:
+        - name: withdrawalId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/withdrawals/{withdrawalId}/reject:
+    post:
+      operationId: adminRejectWithdrawal
+      tags: [admin]
+      summary: Reject a withdrawal
+      parameters:
+        - name: withdrawalId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Get admin system stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    SignupRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        confirmPassword:
+          type: string
+        recoveryQuestion:
+          type: string
+        recoveryAnswer:
+          type: string
+        referredBy:
+          type: string
+          nullable: true
+      required: [username, password, confirmPassword, recoveryQuestion, recoveryAnswer]
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    RecoverPasswordRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        recoveryAnswer:
+          type: string
+        newPassword:
+          type: string
+      required: [username, recoveryAnswer, newPassword]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        token:
+          type: string
+      required: [user, token]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        isActive:
+          type: boolean
+        isBanned:
+          type: boolean
+        isAdmin:
+          type: boolean
+        recoveryQuestion:
+          type: string
+        createdAt:
+          type: string
+      required: [id, username, isActive, isBanned, isAdmin, recoveryQuestion, createdAt]
+
+    Deposit:
+      type: object
+      properties:
+        id:
+          type: integer
+        amountUsdt:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        txHash:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        approvedAt:
+          type: string
+          nullable: true
+      required: [id, amountUsdt, status, createdAt]
+
+    CreateDepositRequest:
+      type: object
+      properties:
+        amountUsdt:
+          type: number
+        txHash:
+          type: string
+          nullable: true
+      required: [amountUsdt]
+
+    MiningStatus:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+        gemsBalance:
+          type: number
+        pendingGems:
+          type: number
+        totalDepositUsdt:
+          type: number
+        dailyRate:
+          type: number
+        miningStartedAt:
+          type: string
+          nullable: true
+        lastClaimedAt:
+          type: string
+          nullable: true
+        progressPercent:
+          type: number
+        totalGemsTarget:
+          type: number
+        daysRemaining:
+          type: number
+      required: [isActive, gemsBalance, pendingGems, totalDepositUsdt, dailyRate, progressPercent, totalGemsTarget, daysRemaining]
+
+    ClaimResult:
+      type: object
+      properties:
+        claimedGems:
+          type: number
+        newBalance:
+          type: number
+      required: [claimedGems, newBalance]
+
+    Conversion:
+      type: object
+      properties:
+        id:
+          type: integer
+        gemsSpent:
+          type: number
+        outputType:
+          type: string
+          enum: [etr, usdt]
+        outputAmount:
+          type: number
+        conversionRate:
+          type: number
+        createdAt:
+          type: string
+      required: [id, gemsSpent, outputType, outputAmount, conversionRate, createdAt]
+
+    CreateConversionRequest:
+      type: object
+      properties:
+        gemsAmount:
+          type: number
+        outputType:
+          type: string
+          enum: [etr, usdt]
+      required: [gemsAmount, outputType]
+
+    WalletBalance:
+      type: object
+      properties:
+        gemsBalance:
+          type: number
+        etrBalance:
+          type: number
+        usdtBalance:
+          type: number
+      required: [gemsBalance, etrBalance, usdtBalance]
+
+    TransferEtrRequest:
+      type: object
+      properties:
+        toUsername:
+          type: string
+        amount:
+          type: number
+      required: [toUsername, amount]
+
+    ReferralInfo:
+      type: object
+      properties:
+        referralCode:
+          type: string
+        totalReferrals:
+          type: integer
+        totalRewardGems:
+          type: number
+        level1:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferralUser"
+        level2:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferralUser"
+      required: [referralCode, totalReferrals, totalRewardGems, level1, level2]
+
+    ReferralUser:
+      type: object
+      properties:
+        username:
+          type: string
+        isActive:
+          type: boolean
+        joinedAt:
+          type: string
+      required: [username, isActive, joinedAt]
+
+    Withdrawal:
+      type: object
+      properties:
+        id:
+          type: integer
+        currency:
+          type: string
+          enum: [etr, usdt]
+        amount:
+          type: number
+        walletAddress:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+        processedAt:
+          type: string
+          nullable: true
+      required: [id, currency, amount, walletAddress, status, createdAt]
+
+    CreateWithdrawalRequest:
+      type: object
+      properties:
+        currency:
+          type: string
+          enum: [etr, usdt]
+        amount:
+          type: number
+        walletAddress:
+          type: string
+      required: [currency, amount, walletAddress]
+
+    SystemStats:
+      type: object
+      properties:
+        totalEtrSwapped:
+          type: number
+        conversionRateGemsPerEtr:
+          type: number
+        isDynamicRateActive:
+          type: boolean
+        etrTotalSupply:
+          type: number
+        etrCirculating:
+          type: number
+      required: [totalEtrSwapped, conversionRateGemsPerEtr, isDynamicRateActive, etrTotalSupply, etrCirculating]
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        isActive:
+          type: boolean
+        isBanned:
+          type: boolean
+        isAdmin:
+          type: boolean
+        gemsBalance:
+          type: number
+        etrBalance:
+          type: number
+        usdtBalance:
+          type: number
+        totalDepositUsdt:
+          type: number
+        createdAt:
+          type: string
+      required: [id, username, isActive, isBanned, isAdmin, gemsBalance, etrBalance, usdtBalance, totalDepositUsdt, createdAt]
+
+    AdminDeposit:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        amountUsdt:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        txHash:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, userId, username, amountUsdt, status, createdAt]
+
+    AdminWithdrawal:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        currency:
+          type: string
+        amount:
+          type: number
+        walletAddress:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        createdAt:
+          type: string
+      required: [id, userId, username, currency, amount, walletAddress, status, createdAt]
+
+    BanUserRequest:
+      type: object
+      properties:
+        banned:
+          type: boolean
+      required: [banned]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        activeUsers:
+          type: integer
+        bannedUsers:
+          type: integer
+        totalGemsMined:
+          type: number
+        totalEtrConverted:
+          type: number
+        totalEtrSupplyUsed:
+          type: number
+        totalDepositsUsdt:
+          type: number
+        pendingDeposits:
+          type: integer
+        pendingWithdrawals:
+          type: integer
+      required: [totalUsers, activeUsers, bannedUsers, totalGemsMined, totalEtrConverted, totalEtrSupplyUsed, totalDepositsUsdt, pendingDeposits, pendingWithdrawals]
