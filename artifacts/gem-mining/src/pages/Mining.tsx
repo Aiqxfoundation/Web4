@@ -87,74 +87,98 @@ function useCountdown(sessionExpiresAt: string, isMiningActive: boolean) {
 const pad = (n: number) => String(n).padStart(2, "0");
 
 // ─── Mining Animation Scene ────────────────────────────────────────────────────
-// Uses the provided GIF as the animation source.
-// Active: full colour, vivid — the GIF plays and glows.
-// Idle:   desaturated + dimmed overlay — visually "paused".
+// Active → animated GIF plays (pickaxe strikes, gems fly)
+// Idle   → frozen first-frame PNG, pickaxe at rest, subtle dark overlay
 function MiningScene({ active }: { active: boolean }) {
   return (
     <div
       className="relative flex items-center justify-center select-none overflow-hidden"
-      style={{ width: "100%", maxWidth: 340, margin: "0 auto" }}
+      style={{ width: "100%", maxWidth: 360, margin: "0 auto", borderRadius: 14 }}
     >
-      {/* ── Ambient orange glow behind the scene when active ── */}
+      {/* ── Ambient orange glow — blooms behind scene when mining ── */}
       <motion.div
-        className="absolute inset-0 pointer-events-none rounded-2xl"
-        animate={active ? { opacity: [0.5, 0.85, 0.5] } : { opacity: 0 }}
-        transition={{ repeat: Infinity, duration: 3.0, ease: "easeInOut" }}
+        className="absolute inset-0 pointer-events-none"
+        animate={active ? { opacity: [0.45, 0.80, 0.45] } : { opacity: 0 }}
+        transition={{ repeat: Infinity, duration: 3.2, ease: "easeInOut" }}
         style={{
+          borderRadius: 14,
           background:
-            "radial-gradient(ellipse 70% 55% at 50% 60%, rgba(249,115,22,0.22) 0%, transparent 75%)",
+            "radial-gradient(ellipse 75% 50% at 50% 65%, rgba(249,115,22,0.28) 0%, transparent 80%)",
+          zIndex: 1,
         }}
       />
 
-      {/* ── The GIF — always mounted so it auto-loops; filtered when idle ── */}
-      <motion.img
-        src="/images/mining-animation.gif"
-        alt="Mining animation"
-        animate={active
-          ? { filter: "saturate(1.25) brightness(1.08)", opacity: 1 }
-          : { filter: "saturate(0.15) brightness(0.45)", opacity: 0.7 }
-        }
-        transition={{ duration: 0.7, ease: "easeInOut" }}
-        style={{
-          width: "100%",
-          height: "auto",
-          display: "block",
-          borderRadius: 12,
-        }}
-      />
-
-      {/* ── "PAUSED" label overlaid when idle ── */}
-      {!active && (
-        <motion.div
+      {/* ── Active: animated GIF plays from frame 0 on each activation ── */}
+      {active && (
+        <motion.img
+          key="gif-active"
+          src="/images/mining-animation.gif"
+          alt="Mining active"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          transition={{ duration: 0.3 }}
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+            borderRadius: 14,
+            position: "relative",
+            zIndex: 0,
+          }}
+        />
+      )}
+
+      {/* ── Idle: frozen first-frame PNG, pickaxe at rest ── */}
+      {!active && (
+        <motion.div
+          key="gif-idle"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35 }}
+          style={{ width: "100%", position: "relative", zIndex: 0 }}
         >
-          <span
-            className="px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest"
+          <img
+            src="/images/mining-idle.png"
+            alt="Mining idle"
             style={{
-              background: "rgba(10,11,16,0.72)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.35)",
-              backdropFilter: "blur(6px)",
+              width: "100%",
+              height: "auto",
+              display: "block",
+              borderRadius: 14,
+              filter: "brightness(0.62) saturate(0.7)",
             }}
+          />
+          {/* Idle overlay badge */}
+          <div
+            className="absolute inset-0 flex items-end justify-center pointer-events-none"
+            style={{ paddingBottom: 14, borderRadius: 14, zIndex: 2 }}
           >
-            Idle
-          </span>
+            <span
+              className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em]"
+              style={{
+                background: "rgba(8,9,14,0.80)",
+                border: "1px solid rgba(249,115,22,0.15)",
+                borderRadius: 999,
+                color: "rgba(249,115,22,0.55)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              ⏸ Mining Paused
+            </span>
+          </div>
         </motion.div>
       )}
 
-      {/* ── Strike flash ring — pulses with mining rhythm when active ── */}
+      {/* ── Strike ring — orange pulse border synced with pickaxe beat ── */}
       {active && (
         <motion.div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          animate={{ opacity: [0, 0.18, 0] }}
-          transition={{ repeat: Infinity, duration: 1.12, ease: "easeOut", repeatDelay: 0.1 }}
+          className="absolute inset-0 pointer-events-none"
+          animate={{ opacity: [0, 0.22, 0] }}
+          transition={{ repeat: Infinity, duration: 1.05, ease: "easeOut", repeatDelay: 0.08 }}
           style={{
-            boxShadow: "0 0 0 3px rgba(249,115,22,0.55) inset",
+            borderRadius: 14,
+            boxShadow: "0 0 0 2.5px rgba(249,115,22,0.7) inset",
+            zIndex: 3,
           }}
         />
       )}
