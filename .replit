@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bash", "postgresql-16"]
+modules = ["nodejs-20", "web", "bash"]
 
 [[artifacts]]
 id = "artifacts/api-server"
@@ -60,3 +60,8 @@ externalPort = 8081
 [[ports]]
 localPort = 20501
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+ALLOWED_ORIGIN = "https://affa6d71-a97a-4e07-a80c-da0f0df7ce76-00-3ld79kaulesrb.riker.replit.dev"
