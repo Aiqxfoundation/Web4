@@ -9,41 +9,10 @@ import {
   ArrowDownUp, Info, TrendingUp, Zap, History, ChevronDown,
   Flame, Star, BarChart3, ArrowRight,
 } from "lucide-react";
+import { GemIcon } from "@/components/GemIcon";
 
 const ETR_LOGO  = "/images/etr-logo.png";
 const USDT_LOGO = "/images/usdt-logo.png";
-
-function GemIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <defs>
-        <linearGradient id="cg-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#7c3aed" />
-        </linearGradient>
-        <linearGradient id="cg-left" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#6d28d9" />
-          <stop offset="100%" stopColor="#4c1d95" />
-        </linearGradient>
-        <linearGradient id="cg-right" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#5b21b6" />
-        </linearGradient>
-        <linearGradient id="cg-bottom" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#2e1065" />
-        </linearGradient>
-      </defs>
-      <polygon points="20,4 30,14 20,10" fill="url(#cg-top)" />
-      <polygon points="20,4 10,14 20,10" fill="url(#cg-top)" opacity="0.85" />
-      <polygon points="30,14 20,10 10,14" fill="url(#cg-right)" opacity="0.7" />
-      <polygon points="10,14 20,10 20,34 6,22" fill="url(#cg-left)" />
-      <polygon points="30,14 20,10 20,34 34,22" fill="url(#cg-right)" />
-      <polygon points="20,34 6,22 34,22" fill="url(#cg-bottom)" />
-      <polygon points="20,5 26,12 22,11" fill="white" opacity="0.35" />
-    </svg>
-  );
-}
 
 export default function Convert() {
   const [amount, setAmount] = useState("");

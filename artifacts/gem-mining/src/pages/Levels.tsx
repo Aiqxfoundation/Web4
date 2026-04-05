@@ -6,7 +6,8 @@ import {
   useGetLevels,
   useInvestInLevel,
 } from "@workspace/api-client-react";
-import { Zap, X, ChevronUp, Gem, TrendingUp, Pickaxe } from "lucide-react";
+import { Zap, X, ChevronUp, TrendingUp, Pickaxe } from "lucide-react";
+import { GemIcon } from "@/components/GemIcon";
 
 // ── Constants (mirror server mining.ts) ──────────────────────────────────────
 const BASE_ANNUAL_GEMS_PER_USDT = 40_000;
@@ -140,13 +141,13 @@ function InvestModal({
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-white/40 flex items-center gap-1.5">
-                      <Gem size={11} className="text-primary" /> Gems / day
+                      <GemIcon size={11} /> Gems / day
                     </span>
                     <span className="text-sm font-black text-white">{fmtGems(newDaily)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-white/40 flex items-center gap-1.5">
-                      <Gem size={11} className="text-primary" /> Gems / year
+                      <GemIcon size={11} /> Gems / year
                     </span>
                     <span className="text-sm font-black" style={{ color: accent }}>{fmtGems(newDaily * 365)}</span>
                   </div>
@@ -255,14 +256,14 @@ export default function Levels() {
         <div className="relative z-10 mt-4 grid grid-cols-2 gap-3">
           <div className="bg-black/25 rounded-xl p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <Gem size={10} className="text-primary" />
+              <GemIcon size={10} />
               <span className="text-[9px] text-white/35 uppercase tracking-wider">Daily Gems</span>
             </div>
             <p className="font-black text-white text-lg leading-none">{fmtGems(currentDailyGems)}</p>
           </div>
           <div className="bg-black/25 rounded-xl p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <Gem size={10} className="text-primary" />
+              <GemIcon size={10} />
               <span className="text-[9px] text-white/35 uppercase tracking-wider">Yearly Gems</span>
             </div>
             <p className="font-black text-lg leading-none" style={{ color: accent }}>
@@ -350,7 +351,7 @@ export default function Levels() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Gem size={12} className="text-primary" />
+                        <GemIcon size={12} />
                       </div>
                       <span className="text-sm text-white/60">Per day</span>
                     </div>
@@ -359,7 +360,7 @@ export default function Levels() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Gem size={12} className="text-primary" />
+                        <GemIcon size={12} />
                       </div>
                       <span className="text-sm text-white/60">Per week</span>
                     </div>
@@ -368,7 +369,7 @@ export default function Levels() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Gem size={12} className="text-primary" />
+                        <GemIcon size={12} />
                       </div>
                       <span className="text-sm text-white/60">Per year</span>
                     </div>
@@ -400,7 +401,7 @@ export default function Levels() {
                 className="rounded-xl bg-white/[0.02] border border-white/5 p-6 text-center"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  <Gem size={18} className="text-primary" />
+                  <GemIcon size={18} />
                 </div>
                 <p className="text-sm text-white/40">Type a USDT amount above to see your gem projection</p>
               </motion.div>

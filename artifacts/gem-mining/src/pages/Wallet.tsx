@@ -5,6 +5,7 @@ import { useGetWallet } from "@workspace/api-client-react";
 import { useGetMe } from "@workspace/api-client-react";
 import { formatCurrency, formatGems, cn } from "@/lib/utils";
 import { ChevronRight, ShieldCheck, ArrowRightLeft } from "lucide-react";
+import { GemIcon } from "@/components/GemIcon";
 
 const ETR_LOGO  = "/images/etr-logo.png";
 const USDT_LOGO = "/images/usdt-logo.png";
@@ -110,7 +111,7 @@ export default function Wallet() {
         {/* Gems */}
         <Row onClick={() => navigate("/convert")}>
           <div className="w-10 h-10 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0">
-            <span className="text-lg">💎</span>
+            <GemIcon size={22} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white">Gems</p>

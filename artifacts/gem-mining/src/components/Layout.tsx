@@ -8,6 +8,7 @@ import { cn, formatGems } from "@/lib/utils";
 import { useGetWallet, useLogout } from "@workspace/api-client-react";
 import type { UserProfile } from "@workspace/api-client-react";
 import { Badge } from "./ui";
+import { GemIcon } from "./GemIcon";
 
 // Bottom tabs (mobile) — main 5 actions
 const BOTTOM_TABS = [
@@ -180,8 +181,9 @@ export function Layout({ children, user }: { children: React.ReactNode; user: Us
           </div>
           <div className="flex items-center gap-3">
             {wallet && (
-              <span className="text-primary font-mono text-xs font-bold">
-                💎 {formatGems(wallet.gemsBalance)}
+              <span className="font-mono text-xs font-bold flex items-center gap-1" style={{ color: "#f97316" }}>
+                <GemIcon size={13} />
+                {formatGems(wallet.gemsBalance)}
               </span>
             )}
             <button onClick={() => setSidebarOpen(true)} className="text-foreground">
