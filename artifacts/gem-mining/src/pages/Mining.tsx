@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useGetMiningStatus, useClaimGems } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
@@ -87,95 +87,146 @@ function useCountdown(sessionExpiresAt: string, isMiningActive: boolean) {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// ─── Floating Gems Scene ───────────────────────────────────────────────────────
-const GEM_CONFIG = [
-  { size: 44, x: "12%",  y: "18%", delay: 0,    dur: 3.8 },
-  { size: 28, x: "32%",  y: "8%",  delay: 0.6,  dur: 4.2 },
-  { size: 56, x: "52%",  y: "22%", delay: 1.1,  dur: 3.5 },
-  { size: 22, x: "72%",  y: "10%", delay: 0.3,  dur: 4.6 },
-  { size: 36, x: "88%",  y: "30%", delay: 1.7,  dur: 3.2 },
-  { size: 18, x: "6%",   y: "58%", delay: 0.9,  dur: 5.0 },
-  { size: 48, x: "26%",  y: "65%", delay: 1.4,  dur: 3.7 },
-  { size: 24, x: "60%",  y: "70%", delay: 0.2,  dur: 4.4 },
-  { size: 32, x: "80%",  y: "60%", delay: 2.0,  dur: 3.9 },
-  { size: 20, x: "44%",  y: "48%", delay: 0.7,  dur: 4.8 },
-  { size: 40, x: "16%",  y: "40%", delay: 1.8,  dur: 3.3 },
-  { size: 16, x: "92%",  y: "75%", delay: 1.2,  dur: 5.2 },
-];
+// ─── Gem Particle System ───────────────────────────────────────────────────────
+interface GemParticle {
+  id: number;
+  x: number;       // left % (0–88)
+  y: number;       // top % (0–65)
+  size: number;    // px
+  floatY: number;  // upward travel px (negative)
+  dur: number;     // float duration seconds
+  lifetime: number; // ms before removal
+  wobble: number;  // slight horizontal drift px
+}
+
+let _pid = 0;
+
+function mkParticle(): GemParticle {
+  const size = 14 + Math.floor(Math.random() * 36); // 14–50 px
+  return {
+    id: ++_pid,
+    x:  4  + Math.random() * 84,
+    y:  8  + Math.random() * 60,
+    size,
+    floatY:  -(24 + Math.random() * 44),
+    dur:      2.2 + Math.random() * 2.2,
+    lifetime: 2800 + Math.random() * 2200,
+    wobble:   (Math.random() - 0.5) * 20,
+  };
+}
 
 function FloatingGems({ active }: { active: boolean }) {
+  const [gems, setGems] = useState<GemParticle[]>([]);
+  // Track per-gem removal timeouts so we can cancel them all on stop
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const addGem = useCallback(() => {
+    const g = mkParticle();
+    setGems(prev => [...prev, g]);
+
+    // Schedule this gem's own removal
+    const t = setTimeout(() => {
+      setGems(prev => prev.filter(p => p.id !== g.id));
+      timersRef.current.delete(g.id);
+    }, g.lifetime);
+    timersRef.current.set(g.id, t);
+  }, []);
+
+  useEffect(() => {
+    if (!active) {
+      // Stop spawning
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      // Cancel all removal timers and wipe gems immediately → fully idle
+      timersRef.current.forEach(t => clearTimeout(t));
+      timersRef.current.clear();
+      setGems([]);
+      return;
+    }
+
+    // Initial staggered burst so the panel isn't empty on start
+    const INITIAL = 6;
+    for (let i = 0; i < INITIAL; i++) {
+      setTimeout(addGem, i * 120);
+    }
+
+    // Continuous spawning while active
+    intervalRef.current = setInterval(addGem, 620);
+
+    return () => {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    };
+    // addGem is stable (useCallback with no deps), safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
   return (
     <div
       className="relative w-full overflow-hidden select-none"
       style={{ height: 160, borderRadius: 12 }}
     >
-      {/* Dark background with subtle glow */}
+      {/* Background */}
       <div
         className="absolute inset-0"
-        style={{
-          background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)",
-          borderRadius: 12,
-        }}
+        style={{ background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", borderRadius: 12 }}
       />
 
-      {/* Active glow bloom */}
-      {active && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          animate={{ opacity: [0.4, 0.75, 0.4] }}
-          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-          style={{
-            borderRadius: 12,
-            background:
-              "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(124,58,237,0.18) 0%, transparent 80%)",
-          }}
-        />
-      )}
+      {/* Glow bloom — only when active */}
+      <AnimatePresence>
+        {active && (
+          <motion.div
+            key="bloom"
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.35, 0.7, 0.35] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 3.5, repeat: active ? Infinity : 0, ease: "easeInOut" }}
+            style={{
+              borderRadius: 12,
+              background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249,115,22,0.10) 0%, transparent 80%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Floating gems */}
-      {GEM_CONFIG.map((g, i) => (
-        <motion.div
-          key={i}
-          className="absolute"
-          style={{ left: g.x, top: g.y }}
-          animate={
-            active
-              ? {
-                  y: [0, -10, 0],
-                  rotate: [0, i % 2 === 0 ? 8 : -8, 0],
-                  opacity: [0.6, 1, 0.6],
-                }
-              : { opacity: 0.18, y: 0, rotate: 0 }
-          }
-          transition={
-            active
-              ? {
-                  repeat: Infinity,
-                  duration: g.dur,
-                  delay: g.delay,
-                  ease: "easeInOut",
-                }
-              : { duration: 0.5 }
-          }
-        >
-          <GemIcon size={g.size} />
-        </motion.div>
-      ))}
-
-      {/* Paused overlay */}
-      {!active && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: "rgba(6,7,14,0.55)", borderRadius: 12 }}
-        >
-          <span
-            className="text-[10px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: "rgba(249,115,22,0.45)" }}
+      {/* Gem particles */}
+      <AnimatePresence>
+        {gems.map(g => (
+          <motion.div
+            key={g.id}
+            className="absolute pointer-events-none"
+            style={{ left: `${g.x}%`, top: `${g.y}%` }}
+            initial={{ opacity: 0, y: 0, x: 0, scale: 0.3 }}
+            animate={{ opacity: 1, y: g.floatY, x: g.wobble, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.2, transition: { duration: 0.35 } }}
+            transition={{ duration: g.dur, ease: "easeOut" }}
           >
-            ⏸ Mining Paused
-          </span>
-        </div>
-      )}
+            <GemIcon size={g.size} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Idle overlay — only when stopped */}
+      <AnimatePresence>
+        {!active && (
+          <motion.div
+            key="idle"
+            className="absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ background: "rgba(6,7,14,0.72)", borderRadius: 12 }}
+          >
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.22em]"
+              style={{ color: "rgba(249,115,22,0.4)" }}
+            >
+              ⏸ Mining Paused
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
