@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useGetMiningStatus, useClaimGems } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
-import { ChevronRight, TrendingUp, Zap, Clock, BarChart3, Pickaxe } from "lucide-react";
+import { ChevronRight, TrendingUp, Clock, BarChart3, Pickaxe } from "lucide-react";
 import { useLocation } from "wouter";
 import { GemIcon } from "@/components/GemIcon";
 
@@ -115,6 +115,25 @@ function mkParticle(): GemParticle {
   };
 }
 
+// Pre-computed static positions for idle state (small gems, full panel coverage)
+const IDLE_GEMS = [
+  { x: 3,  y: 5,  size: 11 }, { x: 14, y: 2,  size: 9  }, { x: 24, y: 8,  size: 13 },
+  { x: 35, y: 3,  size: 10 }, { x: 47, y: 7,  size: 12 }, { x: 58, y: 2,  size: 9  },
+  { x: 68, y: 6,  size: 11 }, { x: 79, y: 3,  size: 10 }, { x: 89, y: 8,  size: 13 },
+  { x: 5,  y: 22, size: 12 }, { x: 18, y: 18, size: 10 }, { x: 30, y: 25, size: 9  },
+  { x: 42, y: 20, size: 13 }, { x: 53, y: 24, size: 11 }, { x: 64, y: 19, size: 10 },
+  { x: 75, y: 26, size: 12 }, { x: 85, y: 21, size: 9  }, { x: 92, y: 18, size: 11 },
+  { x: 2,  y: 42, size: 10 }, { x: 12, y: 38, size: 12 }, { x: 23, y: 45, size: 9  },
+  { x: 36, y: 40, size: 11 }, { x: 48, y: 44, size: 13 }, { x: 60, y: 38, size: 10 },
+  { x: 71, y: 43, size: 12 }, { x: 82, y: 39, size: 9  }, { x: 91, y: 45, size: 11 },
+  { x: 7,  y: 60, size: 11 }, { x: 20, y: 58, size: 9  }, { x: 33, y: 63, size: 12 },
+  { x: 44, y: 57, size: 10 }, { x: 55, y: 62, size: 13 }, { x: 67, y: 58, size: 9  },
+  { x: 78, y: 64, size: 11 }, { x: 88, y: 59, size: 10 }, { x: 95, y: 62, size: 12 },
+  { x: 9,  y: 76, size: 10 }, { x: 22, y: 80, size: 12 }, { x: 38, y: 77, size: 9  },
+  { x: 51, y: 82, size: 11 }, { x: 63, y: 75, size: 13 }, { x: 74, y: 80, size: 10 },
+  { x: 84, y: 76, size: 9  }, { x: 94, y: 82, size: 11 },
+];
+
 function FloatingGems({ active }: { active: boolean }) {
   const [gems, setGems] = useState<GemParticle[]>([]);
   // Track per-gem removal timeouts so we can cancel them all on stop
@@ -206,27 +225,16 @@ function FloatingGems({ active }: { active: boolean }) {
         ))}
       </AnimatePresence>
 
-      {/* Idle overlay — only when stopped */}
-      <AnimatePresence>
-        {!active && (
-          <motion.div
-            key="idle"
-            className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ background: "rgba(6,7,14,0.72)", borderRadius: 12 }}
-          >
-            <span
-              className="text-[10px] font-bold uppercase tracking-[0.22em]"
-              style={{ color: "rgba(249,115,22,0.4)" }}
-            >
-              ⏸ Mining Paused
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Idle state — static small gems, no animation */}
+      {!active && IDLE_GEMS.map((g, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none"
+          style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: 0.22 }}
+        >
+          <GemIcon size={g.size} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -391,33 +399,6 @@ export default function Mining() {
   return (
     <div className="max-w-md mx-auto px-4 py-5 pb-28 md:pb-8 space-y-3">
 
-      {/* ── Page header ────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-0.5 mb-1">
-        <div className="flex items-center gap-2.5">
-          <Pickaxe size={13} className="text-white/25" />
-          <h1 className="text-[11px] text-white/30 uppercase tracking-[0.2em] font-semibold">
-            Mining Station
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <motion.div
-            animate={isMiningActive ? { opacity: [1, 0.2, 1] } : { opacity: 0.3 }}
-            transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-            style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: isMiningActive ? "#f97316" : "rgba(255,255,255,0.15)",
-              boxShadow: isMiningActive ? "0 0 8px rgba(249,115,22,0.9)" : "none",
-            }}
-          />
-          <span
-            className="text-[11px] font-bold uppercase tracking-wide"
-            style={{ color: isMiningActive ? "#f97316" : "rgba(255,255,255,0.22)" }}
-          >
-            {isMiningActive ? "Active" : "Paused"}
-          </span>
-        </div>
-      </div>
-
       {/* ════════════════════════════════════════════════════════════════════════
           HERO CARD
       ════════════════════════════════════════════════════════════════════════ */}
@@ -443,35 +424,6 @@ export default function Mining() {
               style={{ background: "rgba(124,58,237,0.08)" }} />
           </>
         )}
-
-        {/* ── Status + Level row ──────────────────────────────────────────── */}
-        <div
-          className="flex items-center justify-between px-5 pt-4 pb-3.5"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-        >
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
-            style={{
-              background: isMiningActive ? "rgba(249,115,22,0.1)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${isMiningActive ? "rgba(249,115,22,0.22)" : "rgba(255,255,255,0.07)"}`,
-              color: isMiningActive ? "#f97316" : "rgba(255,255,255,0.28)",
-            }}
-          >
-            {isMiningActive ? <><Zap size={10} /> Mining</> : "⏸ Paused"}
-          </div>
-          <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "rgba(255,255,255,0.3)",
-            }}
-          >
-            <GemIcon size={11} />
-            {isFreeUser ? "Free Node" : LEVEL_NAMES[currentLevel]}
-            {!isFreeUser && ` · Lv ${currentLevel}`}
-          </div>
-        </div>
 
         {/* ── Floating gems scene ─────────────────────────────────────────── */}
         <div className="px-4 pt-4 pb-2">
@@ -629,20 +581,6 @@ export default function Mining() {
             <><Pickaxe size={16} /> Mining in Progress</>
           )}
         </motion.button>
-      </motion.div>
-
-      {/* ── Extra Stats ────────────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 gap-3"
-      >
-        <StatPill icon={<TrendingUp size={14} />} label="Total Deposited"
-          value={`$${(status.totalDepositUsdt ?? 0).toLocaleString()}`} sub="USDT" />
-        <StatPill icon={<Clock size={14} />} label="Days Remaining"
-          value={status.daysRemaining != null ? String(status.daysRemaining) : "—"}
-          sub="of 180-day cycle" />
       </motion.div>
 
       {/* ── Upgrade / Level Card ───────────────────────────────────────────── */}
