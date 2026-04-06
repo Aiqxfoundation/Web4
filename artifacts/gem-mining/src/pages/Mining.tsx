@@ -68,7 +68,21 @@ function useSmoothGems(
   return Math.floor(live);
 }
 
-// ─── Countdown ─────────────────────────────────────────────────────────────────
+// ─── Generic ms-until countdown ────────────────────────────────────────────────
+function useMsUntil(targetIso: string | null) {
+  const [ms, setMs] = useState(() =>
+    targetIso ? Math.max(0, new Date(targetIso).getTime() - Date.now()) : 0,
+  );
+  useEffect(() => {
+    if (!targetIso) { setMs(0); return; }
+    const target = new Date(targetIso).getTime();
+    const id = setInterval(() => setMs(Math.max(0, target - Date.now())), 500);
+    return () => clearInterval(id);
+  }, [targetIso]);
+  return ms;
+}
+
+// ─── Session expiry countdown ───────────────────────────────────────────────────
 function useCountdown(sessionExpiresAt: string, isMiningActive: boolean) {
   const [ms, setMs] = useState(() =>
     Math.max(0, new Date(sessionExpiresAt).getTime() - Date.now()),
