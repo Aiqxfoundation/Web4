@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
 
 const router = Router();
@@ -47,6 +47,51 @@ router.get("/", requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error("Referrals error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /referrals/apply — apply a referral code after signup
+router.post("/apply", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+
+    if (user.referredByUserId) {
+      res.status(400).json({ error: "You have already applied a referral code." });
+      return;
+    }
+
+    const { referralCode } = req.body;
+    if (!referralCode || typeof referralCode !== "string" || !referralCode.trim()) {
+      res.status(400).json({ error: "Referral code is required." });
+      return;
+    }
+
+    const code = referralCode.trim().toUpperCase();
+
+    const [referrer] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.referralCode, code));
+
+    if (!referrer) {
+      res.status(404).json({ error: "Invalid referral code. No user found." });
+      return;
+    }
+
+    if (referrer.id === user.id) {
+      res.status(400).json({ error: "You cannot refer yourself." });
+      return;
+    }
+
+    await db
+      .update(usersTable)
+      .set({ referredByUserId: referrer.id })
+      .where(eq(usersTable.id, user.id));
+
+    res.json({ message: `Successfully linked to ${referrer.username}'s referral.` });
+  } catch (err) {
+    console.error("Apply referral error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

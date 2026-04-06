@@ -316,6 +316,17 @@ export const useGetReferrals = (options?: { query?: any }) => {
   });
 };
 
+export const useApplyReferral = (options?: any) => {
+  return useMutation<{ message: string }, Error, { referralCode: string }>({
+    mutationFn: (data) =>
+      customFetch<{ message: string }>("/api/referrals/apply", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    ...options,
+  });
+};
+
 // ─── Admin: Ban / Adjust balance ────────────────────────────────
 
 export const useAdminBanUserFull = (options?: any) => {

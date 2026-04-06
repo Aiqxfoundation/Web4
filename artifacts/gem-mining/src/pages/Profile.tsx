@@ -3,10 +3,11 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
-import { useGetMe, useGetLevels, useGetReferrals, useGetWallet } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetMe, useGetLevels, useGetReferrals, useGetWallet, useApplyReferral } from "@workspace/api-client-react";
 import {
   Copy, CheckCheck, Calendar, ShieldCheck, Users, TrendingUp,
-  Crown, Share2, Lock, ChevronRight, Activity, Award, Pickaxe,
+  Crown, Share2, Lock, ChevronRight, Activity, Award, Pickaxe, UserPlus,
 } from "lucide-react";
 import { GemIcon } from "@/components/GemIcon";
 import { formatGems } from "@/lib/utils";
@@ -70,12 +71,30 @@ function SectionHeader({ icon, title, sub }: { icon: React.ReactNode; title: str
 
 export default function Profile() {
   const [, navigate]            = useLocation();
+  const queryClient             = useQueryClient();
   const { data: user }          = useGetMe();
   const { data: levelsData }    = useGetLevels();
   const { data: referralData }  = useGetReferrals();
   const { data: wallet }        = useGetWallet();
+  const { mutate: applyReferral, isPending: isApplying } = useApplyReferral();
+  const [refCodeInput, setRefCodeInput] = useState("");
 
   if (!user) return null;
+
+  const hasReferrer = !!(user as any).referredByUserId;
+
+  const handleApplyReferral = () => {
+    const code = refCodeInput.trim();
+    if (!code) { toast.error("Please enter a referral code"); return; }
+    applyReferral({ referralCode: code }, {
+      onSuccess: (res: any) => {
+        toast.success(res.message);
+        setRefCodeInput("");
+        queryClient.invalidateQueries();
+      },
+      onError: (err: any) => toast.error(err?.data?.error || err?.message || "Failed to apply referral code"),
+    });
+  };
 
   const isVerified     = (wallet as any)?.isVerified ?? (user as any)?.isKycVerified ?? false;
   const verifiedAt     = (wallet as any)?.verifiedAt ?? (user as any)?.kycVerifiedAt ?? null;
@@ -227,6 +246,37 @@ export default function Profile() {
           </button>
         )}
       </Section>
+
+      {/* ── Apply Referral Code (only if not yet referred) ─────────────── */}
+      {!hasReferrer && (
+        <Section delay={0.09}>
+          <SectionHeader icon={<UserPlus size={14} />} title="Apply Referral Code" sub="Link your account to a referrer" />
+          <div className="p-5 space-y-3">
+            <p className="text-[11px] text-white/35 leading-relaxed">
+              You signed up without a referral code. You can still apply one now to become part of someone's network.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter referral code"
+                value={refCodeInput}
+                onChange={e => setRefCodeInput(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === "Enter" && handleApplyReferral()}
+                maxLength={16}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono placeholder:text-white/20 focus:outline-none focus:border-white/20 uppercase tracking-widest"
+              />
+              <button
+                onClick={handleApplyReferral}
+                disabled={isApplying || !refCodeInput.trim()}
+                className="px-4 py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg, #ea6c10 0%, #f97316 100%)" }}
+              >
+                {isApplying ? "..." : "Apply"}
+              </button>
+            </div>
+          </div>
+        </Section>
+      )}
 
       {/* ── Referrals ─────────────────────────────────────────────────────── */}
       {referralData && (

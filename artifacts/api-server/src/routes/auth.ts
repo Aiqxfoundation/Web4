@@ -164,6 +164,7 @@ router.get("/me", requireAuth, async (req, res) => {
     kycVerifiedAt: user.kycVerifiedAt?.toISOString() ?? null,
     recoveryQuestion: user.recoveryQuestion,
     createdAt: user.createdAt.toISOString(),
+    referredByUserId: user.referredByUserId ?? null,
   });
 });
 
