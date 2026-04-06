@@ -15,7 +15,6 @@ import {
 
 const router = Router();
 
-const MIN_CLAIM_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 async function getUserLevelData(userId: number) {
   const unlockedLevels = await db
@@ -164,20 +163,6 @@ router.post("/claim", requireAuth, async (req, res) => {
 
     const { totalMiningPower } = await getUserLevelData(user.id);
     const currentLevel: number = user.currentLevel ?? 0;
-
-    // Enforce 3-hour minimum claim window per session
-    const sessionStartedAt = user.lastClaimedAt ?? user.miningStartedAt;
-    const now = new Date();
-    const msElapsed = now.getTime() - sessionStartedAt.getTime();
-    if (msElapsed < MIN_CLAIM_MS) {
-      const msRemaining = MIN_CLAIM_MS - msElapsed;
-      const minutesRemaining = Math.ceil(msRemaining / 60_000);
-      const h = Math.floor(minutesRemaining / 60);
-      const m = minutesRemaining % 60;
-      const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-      res.status(400).json({ error: `Too early to claim. Please wait ${timeStr} more.` });
-      return;
-    }
 
     const pendingGems = calculatePendingGems(
       currentLevel,
