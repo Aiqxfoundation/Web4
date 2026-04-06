@@ -75,6 +75,7 @@ export interface CreateDepositRequest {
 }
 
 export interface MiningStatus {
+  miningNotStarted?: boolean;
   isActive: boolean;
   gemsBalance: number;
   pendingGems: number;
@@ -85,6 +86,13 @@ export interface MiningStatus {
   progressPercent: number;
   totalGemsTarget: number;
   daysRemaining: number;
+  sessionStartedAt?: string | null;
+  sessionExpiresAt?: string | null;
+  isMiningActive?: boolean;
+  timeRemainingMs?: number;
+  isFreeUser?: boolean;
+  currentLevel?: number;
+  sessionDurationHours?: number;
 }
 
 export interface ClaimResult {

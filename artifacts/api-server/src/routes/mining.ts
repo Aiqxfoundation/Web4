@@ -15,6 +15,8 @@ import {
 
 const router = Router();
 
+const MIN_CLAIM_MS = 3 * 60 * 60 * 1000; // 3 hours
+
 async function getUserLevelData(userId: number) {
   const unlockedLevels = await db
     .select()
@@ -34,13 +36,29 @@ router.get("/status", requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
 
-    // Ensure miningStartedAt exists (backfill for existing free users)
+    // Mining has not been started yet — return a minimal "not started" state
     if (!user.miningStartedAt) {
-      await db
-        .update(usersTable)
-        .set({ miningStartedAt: new Date() })
-        .where(eq(usersTable.id, user.id));
-      user.miningStartedAt = new Date();
+      return res.json({
+        miningNotStarted: true,
+        isFreeUser: true,
+        currentLevel: user.currentLevel ?? 0,
+        isActive: user.isActive,
+        gemsBalance: user.gemsBalance,
+        pendingGems: 0,
+        totalMiningPower: 0,
+        totalDepositUsdt: user.totalDepositUsdt,
+        dailyRate: 0,
+        miningStartedAt: null,
+        lastClaimedAt: null,
+        progressPercent: null,
+        totalGemsTarget: null,
+        daysRemaining: null,
+        sessionDurationHours: FREE_USER_SESSION_HOURS,
+        sessionStartedAt: null,
+        sessionExpiresAt: null,
+        isMiningActive: false,
+        timeRemainingMs: 0,
+      });
     }
 
     const { totalMiningPower } = await getUserLevelData(user.id);
@@ -77,7 +95,6 @@ router.get("/status", requireAuth, async (req, res) => {
       ? null
       : totalMiningPower * DAILY_GEMS_PER_USDT * PAID_MINING_PERIOD_DAYS;
 
-    // ── Session window ──────────────────────────────────────────────────────
     const sessionDurationMs = getSessionDurationMs(currentLevel);
     const sessionStartedAt  = user.lastClaimedAt ?? user.miningStartedAt;
     const sessionExpiresAt  = new Date(sessionStartedAt.getTime() + sessionDurationMs);
@@ -86,6 +103,7 @@ router.get("/status", requireAuth, async (req, res) => {
     const sessionDurationHours = isFreeUser ? FREE_USER_SESSION_HOURS : PAID_USER_SESSION_HOURS;
 
     res.json({
+      miningNotStarted: false,
       isFreeUser,
       currentLevel,
       isActive: user.isActive,
@@ -111,6 +129,29 @@ router.get("/status", requireAuth, async (req, res) => {
   }
 });
 
+// POST /mining/start  — explicitly start mining for the first time
+router.post("/start", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+
+    if (user.miningStartedAt) {
+      res.status(400).json({ error: "Mining has already been started." });
+      return;
+    }
+
+    const now = new Date();
+    await db
+      .update(usersTable)
+      .set({ miningStartedAt: now })
+      .where(eq(usersTable.id, user.id));
+
+    res.json({ started: true, miningStartedAt: now.toISOString() });
+  } catch (err) {
+    console.error("Start mining error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // POST /mining/claim
 router.post("/claim", requireAuth, async (req, res) => {
   try {
@@ -123,6 +164,20 @@ router.post("/claim", requireAuth, async (req, res) => {
 
     const { totalMiningPower } = await getUserLevelData(user.id);
     const currentLevel: number = user.currentLevel ?? 0;
+
+    // Enforce 3-hour minimum claim window per session
+    const sessionStartedAt = user.lastClaimedAt ?? user.miningStartedAt;
+    const now = new Date();
+    const msElapsed = now.getTime() - sessionStartedAt.getTime();
+    if (msElapsed < MIN_CLAIM_MS) {
+      const msRemaining = MIN_CLAIM_MS - msElapsed;
+      const minutesRemaining = Math.ceil(msRemaining / 60_000);
+      const h = Math.floor(minutesRemaining / 60);
+      const m = minutesRemaining % 60;
+      const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+      res.status(400).json({ error: `Too early to claim. Please wait ${timeStr} more.` });
+      return;
+    }
 
     const pendingGems = calculatePendingGems(
       currentLevel,

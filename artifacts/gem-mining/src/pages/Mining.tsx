@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { useGetMiningStatus, useClaimGems } from "@workspace/api-client-react";
+import { useGetMiningStatus, useClaimGems, useStartMining } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
 import { ChevronRight, TrendingUp, Clock, BarChart3, Pickaxe } from "lucide-react";
 import { useLocation } from "wouter";
@@ -329,13 +329,15 @@ function StatPill({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function Mining() {
-  const queryClient                   = useQueryClient();
-  const [, setLocation]               = useLocation();
-  const { data, isLoading }           = useGetMiningStatus();
-  const { mutate: claim, isPending }  = useClaimGems();
-  const [claimFlash, setClaimFlash]   = useState(false);
+  const queryClient                      = useQueryClient();
+  const [, setLocation]                  = useLocation();
+  const { data, isLoading }              = useGetMiningStatus();
+  const { mutate: claim, isPending }     = useClaimGems();
+  const { mutate: startMine, isPending: isStarting } = useStartMining();
+  const [claimFlash, setClaimFlash]      = useState(false);
 
   const status           = data as unknown as ExtendedMiningStatus | undefined;
+  const miningNotStarted = (status as any)?.miningNotStarted === true;
   const isFreeUser       = status?.isFreeUser ?? true;
   const currentLevel     = status?.currentLevel ?? 0;
   const dailyRate        = status?.dailyRate ?? 0;
@@ -360,6 +362,16 @@ export default function Mining() {
     ? new Date(sessionExpiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
 
+  const handleStartMining = useCallback(() => {
+    startMine(undefined, {
+      onSuccess: () => {
+        toast.success("Mining started! Gems will accumulate over your session.");
+        queryClient.invalidateQueries();
+      },
+      onError: (err: any) => toast.error(err.error || "Could not start mining"),
+    });
+  }, [startMine, queryClient]);
+
   const handleClaim = useCallback(() => {
     if (!status?.pendingGems && liveGems <= 0) {
       toast.error("No gems to claim yet.");
@@ -372,7 +384,7 @@ export default function Mining() {
         toast.success(`Claimed ${formatGems(res.claimedGems)} gems — mining restarted`);
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err.error || "Claim failed"),
+      onError: (err: any) => toast.error(err.error || err.message || "Claim failed"),
     });
   }, [status, liveGems, claim, queryClient]);
 
@@ -395,6 +407,72 @@ export default function Mining() {
   }
 
   if (!status) return null;
+
+  // ── Mining not started yet — show Start Mining screen ──────────────────────
+  if (miningNotStarted) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-10 pb-28 md:pb-8 flex flex-col items-center justify-center min-h-[70vh] gap-6">
+        {/* Idle gem field */}
+        <div
+          className="relative w-full overflow-hidden rounded-3xl"
+          style={{ height: 180, background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", border: "1px solid rgba(255,255,255,0.06)" }}
+        >
+          {IDLE_GEMS.map((g, i) => (
+            <div key={i} className="absolute pointer-events-none" style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: 0.18 }}>
+              <GemIcon size={g.size} />
+            </div>
+          ))}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}>
+              <Pickaxe size={28} style={{ color: "rgba(249,115,22,0.5)" }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Copy */}
+        <div className="text-center px-2">
+          <h2 className="text-2xl font-black text-white tracking-tight mb-2">Ready to Mine?</h2>
+          <p className="text-sm text-white/35 leading-relaxed">
+            Start your mining session to begin accumulating gems. Free users earn gems every 3-hour cycle.
+          </p>
+        </div>
+
+        {/* Start button */}
+        <motion.button
+          onClick={handleStartMining}
+          disabled={isStarting}
+          whileTap={{ scale: 0.97 }}
+          className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #ea6c10 0%, #f97316 50%, #fb923c 100%)",
+            boxShadow: "0 6px 28px rgba(249,115,22,0.4)",
+            color: "#fff",
+          }}
+        >
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ x: ["-100%", "200%"] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", repeatDelay: 1.5 }}
+            style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)", width: "50%" }}
+          />
+          {isStarting ? (
+            <>
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+                style={{ width: 16, height: 16, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
+              Starting…
+            </>
+          ) : (
+            <><Pickaxe size={16} /> Start Mining</>
+          )}
+        </motion.button>
+
+        <p className="text-[10px] text-white/20 text-center">
+          Free users earn gems in 3-hour sessions · Minimum 3 hours before claiming
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto px-4 py-5 pb-28 md:pb-8 space-y-3">
@@ -538,9 +616,9 @@ export default function Mining() {
           whileTap={{ scale: 0.98 }}
           animate={claimFlash ? { scale: [1, 1.04, 1] } : {}}
           transition={{ duration: 0.22 }}
-          className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           style={
-            !stoppedAndEmpty
+            hasPending
               ? {
                   background: "linear-gradient(135deg, #ea6c10 0%, #f97316 50%, #fb923c 100%)",
                   boxShadow: "0 6px 24px rgba(249,115,22,0.4), 0 1px 0 rgba(255,255,255,0.2) inset",
@@ -549,11 +627,11 @@ export default function Mining() {
               : {
                   background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(255,255,255,0.18)",
+                  color: "rgba(255,255,255,0.22)",
                 }
           }
         >
-          {!stoppedAndEmpty && !isPending && (
+          {hasPending && !isPending && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               animate={{ x: ["-100%", "200%"] }}

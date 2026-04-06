@@ -75,7 +75,7 @@ router.post("/signup", async (req, res) => {
       recoveryAnswerHash,
       referralCode,
       referredByUserId,
-      miningStartedAt: new Date(), // free mining starts immediately on signup
+      // miningStartedAt left null — user must explicitly start mining
     }).returning();
 
     const token = signToken(user.id);

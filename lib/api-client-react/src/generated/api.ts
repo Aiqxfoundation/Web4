@@ -847,6 +847,40 @@ export const useClaimGems = <
   return useMutation(getClaimGemsMutationOptions(options));
 };
 
+// ── Start Mining ──────────────────────────────────────────────────────────────
+
+export const startMining = async (
+  options?: RequestInit,
+): Promise<{ started: boolean; miningStartedAt: string }> => {
+  return customFetch<{ started: boolean; miningStartedAt: string }>(
+    `/api/mining/start`,
+    { ...options, method: "POST" },
+  );
+};
+
+export const useStartMining = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startMining>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof startMining>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation<Awaited<ReturnType<typeof startMining>>, TError, void, TContext>({
+    mutationKey: ["startMining"],
+    mutationFn: () => startMining(),
+    ...options?.mutation,
+  });
+};
+
 /**
  * @summary Get my conversion history
  */
