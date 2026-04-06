@@ -11,6 +11,7 @@ import {
   FREE_USER_SESSION_HOURS,
   PAID_USER_SESSION_HOURS,
   getSessionDurationMs,
+  getLevelMultiplier,
 } from "../lib/mining.js";
 
 const router = Router();
@@ -74,7 +75,7 @@ router.get("/status", requireAuth, async (req, res) => {
 
     const dailyRate = isFreeUser
       ? FREE_USER_DAILY_GEMS
-      : totalMiningPower * DAILY_GEMS_PER_USDT;
+      : totalMiningPower * DAILY_GEMS_PER_USDT * getLevelMultiplier(currentLevel);
 
     const now = new Date();
     const totalDaysSinceStart =

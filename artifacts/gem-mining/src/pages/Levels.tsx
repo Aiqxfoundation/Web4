@@ -187,7 +187,7 @@ export default function Levels() {
   const accent            = LEVEL_ACCENTS[currentLevel] ?? LEVEL_ACCENTS[0];
 
   const calcUsdt    = Number(calcInput) || 0;
-  const calcTotal   = totalMiningPower + calcUsdt;
+  const calcTotal   = calcUsdt;
   const calcLevel   = levelFromPower(calcTotal);
   const calcDaily   = calcUsdt > 0 ? dailyGems(calcTotal, calcLevel) : currentDailyGems;
   const calcAccent  = LEVEL_ACCENTS[calcLevel] ?? LEVEL_ACCENTS[0];
