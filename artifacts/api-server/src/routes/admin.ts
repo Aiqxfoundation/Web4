@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable, depositsTable, withdrawalsTable, conversionsTable, systemConfigTable, depositAddressesTable } from "@workspace/db";
+import { db, usersTable, depositsTable, withdrawalsTable, conversionsTable, systemConfigTable, depositAddressesTable, referralGemRewardsTable } from "@workspace/db";
 import { eq, sum } from "drizzle-orm";
 import { requireAdmin } from "../lib/auth.js";
 
@@ -17,6 +17,7 @@ router.get("/users", requireAdmin, async (_req, res) => {
       isActive: u.isActive,
       isBanned: u.isBanned,
       isAdmin: u.isAdmin,
+      isKycVerified: u.isKycVerified,
       gemsBalance: u.gemsBalance,
       etrBalance: u.etrBalance,
       usdtBalance: u.usdtBalance,
@@ -125,6 +126,32 @@ router.post("/deposits/:depositId/approve", requireAdmin, async (req, res) => {
         totalDepositUsdt: newTotal,
         miningStartedAt: user.isActive ? user.miningStartedAt : now,
       }).where(eq(usersTable.id, user.id));
+
+      // ─── Referral USDT Commission (15%) ────────────────────────────────────
+      // Walk up the referral tree to find the first KYC-verified upline (max 2 levels)
+      if (user.referredByUserId) {
+        const commissionAmount = deposit.amountUsdt * 0.15;
+        let uplineId: number | null = user.referredByUserId as unknown as number;
+        let depth = 0;
+
+        while (uplineId && depth < 2) {
+          const [upline] = await db.select().from(usersTable).where(eq(usersTable.id, uplineId));
+          if (!upline) break;
+
+          if (upline.isKycVerified) {
+            // Credit 15% USDT commission to the first verified upline found
+            await db.update(usersTable)
+              .set({ usdtBalance: upline.usdtBalance + commissionAmount })
+              .where(eq(usersTable.id, upline.id));
+            console.log(`Referral commission: credited $${commissionAmount} USDT to @${upline.username} for deposit of $${deposit.amountUsdt} by @${user.username}`);
+            break;
+          } else {
+            // Not verified — bubble up one more level
+            uplineId = upline.referredByUserId as unknown as number;
+            depth++;
+          }
+        }
+      }
     }
 
     res.json({ message: "Deposit approved successfully" });
@@ -202,6 +229,9 @@ router.get("/withdrawals", requireAdmin, async (_req, res) => {
 router.post("/withdrawals/:withdrawalId/approve", requireAdmin, async (req, res) => {
   try {
     const withdrawalId = parseInt(req.params.withdrawalId);
+    const [withdrawal] = await db.select().from(withdrawalsTable).where(eq(withdrawalsTable.id, withdrawalId));
+    if (!withdrawal) { res.status(404).json({ error: "Withdrawal not found" }); return; }
+    if (withdrawal.status !== "pending") { res.status(400).json({ error: "Withdrawal is not pending" }); return; }
     await db.update(withdrawalsTable).set({ status: "approved", processedAt: new Date() }).where(eq(withdrawalsTable.id, withdrawalId));
     res.json({ message: "Withdrawal approved" });
   } catch (err) {
@@ -216,25 +246,100 @@ router.post("/withdrawals/:withdrawalId/reject", requireAdmin, async (req, res) 
     const withdrawalId = parseInt(req.params.withdrawalId);
     const [withdrawal] = await db.select().from(withdrawalsTable).where(eq(withdrawalsTable.id, withdrawalId));
     if (!withdrawal) { res.status(404).json({ error: "Withdrawal not found" }); return; }
+    if (withdrawal.status !== "pending") { res.status(400).json({ error: "Withdrawal is not pending" }); return; }
 
+    // Refund balance
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, withdrawal.userId));
     if (user) {
       if (withdrawal.currency === "etr") {
         await db.update(usersTable).set({ etrBalance: user.etrBalance + withdrawal.amount }).where(eq(usersTable.id, user.id));
-      } else {
+      } else if (withdrawal.currency === "usdt") {
         await db.update(usersTable).set({ usdtBalance: user.usdtBalance + withdrawal.amount }).where(eq(usersTable.id, user.id));
       }
     }
-
     await db.update(withdrawalsTable).set({ status: "rejected", processedAt: new Date() }).where(eq(withdrawalsTable.id, withdrawalId));
-    res.json({ message: "Withdrawal rejected and funds refunded" });
+    res.json({ message: "Withdrawal rejected and balance refunded" });
   } catch (err) {
     console.error("Admin reject withdrawal error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// ─── DEPOSIT ADDRESSES ─────────────────────────────────────────────────
+// ─── STATS ────────────────────────────────────────────────────────────
+
+// GET /admin/stats
+router.get("/stats", requireAdmin, async (_req, res) => {
+  try {
+    const users = await db.select().from(usersTable);
+    const deposits = await db.select().from(depositsTable);
+    const withdrawals = await db.select().from(withdrawalsTable);
+    const conversions = await db.select().from(conversionsTable);
+    const addresses = await db.select().from(depositAddressesTable);
+
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.isActive).length;
+    const bannedUsers = users.filter(u => u.isBanned).length;
+    const totalGemsMined = users.reduce((s, u) => s + u.gemsBalance, 0);
+    const totalEtrConverted = conversions.filter(c => c.outputType === "etr").reduce((s, c) => s + c.outputAmount, 0);
+    const totalEtrSupplyUsed = users.reduce((s, u) => s + u.etrBalance, 0);
+    const totalDepositsUsdt = deposits.filter(d => d.status === "approved").reduce((s, d) => s + d.amountUsdt, 0);
+    const pendingDeposits = deposits.filter(d => d.status === "pending").length;
+    const pendingWithdrawals = withdrawals.filter(w => w.status === "pending").length;
+    const totalAddresses = addresses.length;
+    const activeAddresses = addresses.filter(a => a.isActive).length;
+
+    res.json({
+      totalUsers,
+      activeUsers,
+      bannedUsers,
+      totalGemsMined,
+      totalEtrConverted,
+      totalEtrSupplyUsed,
+      totalDepositsUsdt,
+      pendingDeposits,
+      pendingWithdrawals,
+      totalAddresses,
+      activeAddresses,
+    });
+  } catch (err) {
+    console.error("Admin stats error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── SYSTEM CONFIG ────────────────────────────────────────────────────
+
+// GET /admin/system-config
+router.get("/system-config", requireAdmin, async (_req, res) => {
+  try {
+    const configs = await db.select().from(systemConfigTable);
+    const configMap: Record<string, string> = {};
+    configs.forEach(c => { configMap[c.key] = c.value; });
+    res.json(configMap);
+  } catch (err) {
+    console.error("Admin get system config error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /admin/system-config
+router.post("/system-config", requireAdmin, async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key || value === undefined) {
+      res.status(400).json({ error: "key and value are required" });
+      return;
+    }
+    await db.insert(systemConfigTable).values({ key, value: String(value) })
+      .onConflictDoUpdate({ target: systemConfigTable.key, set: { value: String(value) } });
+    res.json({ message: "Config updated" });
+  } catch (err) {
+    console.error("Admin update system config error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── DEPOSIT ADDRESSES ────────────────────────────────────────────────
 
 // GET /admin/addresses
 router.get("/addresses", requireAdmin, async (_req, res) => {
@@ -258,22 +363,11 @@ router.get("/addresses", requireAdmin, async (_req, res) => {
 router.post("/addresses", requireAdmin, async (req, res) => {
   try {
     const { address, label, network } = req.body;
-    if (!address || !address.trim()) {
-      res.status(400).json({ error: "Address is required" });
+    if (!address || !label || !network) {
+      res.status(400).json({ error: "address, label and network are required" });
       return;
     }
-    // Basic BSC address validation (0x prefix + 40 hex chars)
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address.trim())) {
-      res.status(400).json({ error: "Invalid BSC/BNB address format (must be 0x...)" });
-      return;
-    }
-    const [newAddr] = await db.insert(depositAddressesTable).values({
-      address: address.trim(),
-      label: label?.trim() || "",
-      network: network || "BSC (BEP-20)",
-      isActive: true,
-    }).returning();
-
+    const [newAddr] = await db.insert(depositAddressesTable).values({ address, label, network }).returning();
     res.status(201).json({
       id: newAddr.id,
       address: newAddr.address,
@@ -293,22 +387,13 @@ router.put("/addresses/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { address, label, network, isActive } = req.body;
-
-    const [existing] = await db.select().from(depositAddressesTable).where(eq(depositAddressesTable.id, id));
-    if (!existing) { res.status(404).json({ error: "Address not found" }); return; }
-
-    if (address && !/^0x[a-fA-F0-9]{40}$/.test(address.trim())) {
-      res.status(400).json({ error: "Invalid BSC/BNB address format" });
-      return;
-    }
-
-    const updates: any = { updatedAt: new Date() };
-    if (address !== undefined) updates.address = address.trim();
-    if (label !== undefined) updates.label = label.trim();
-    if (network !== undefined) updates.network = network.trim();
+    const updates: any = {};
+    if (address !== undefined) updates.address = address;
+    if (label !== undefined) updates.label = label;
+    if (network !== undefined) updates.network = network;
     if (isActive !== undefined) updates.isActive = isActive;
-
-    const [updated] = await db.update(depositAddressesTable).set(updates).where(eq(depositAddressesTable.id, id)).returning();
+    await db.update(depositAddressesTable).set(updates).where(eq(depositAddressesTable.id, id));
+    const [updated] = await db.select().from(depositAddressesTable).where(eq(depositAddressesTable.id, id));
     res.json({
       id: updated.id,
       address: updated.address,
@@ -327,59 +412,10 @@ router.put("/addresses/:id", requireAdmin, async (req, res) => {
 router.delete("/addresses/:id", requireAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [existing] = await db.select().from(depositAddressesTable).where(eq(depositAddressesTable.id, id));
-    if (!existing) { res.status(404).json({ error: "Address not found" }); return; }
     await db.delete(depositAddressesTable).where(eq(depositAddressesTable.id, id));
     res.json({ message: "Address deleted" });
   } catch (err) {
     console.error("Admin delete address error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ─── STATS ─────────────────────────────────────────────────────────────
-
-// GET /admin/stats
-router.get("/stats", requireAdmin, async (_req, res) => {
-  try {
-    const users = await db.select().from(usersTable);
-    const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.isActive).length;
-    const bannedUsers = users.filter(u => u.isBanned).length;
-    const totalGemsMined = users.reduce((acc, u) => acc + u.gemsBalance, 0);
-    const totalDepositsUsdt = users.reduce((acc, u) => acc + u.totalDepositUsdt, 0);
-
-    const [etrRow] = await db.select({ total: sum(conversionsTable.outputAmount) })
-      .from(conversionsTable).where(eq(conversionsTable.outputType, "etr"));
-    const totalEtrConverted = etrRow?.total ? parseFloat(etrRow.total) : 0;
-
-    const [configRow] = await db.select().from(systemConfigTable).where(eq(systemConfigTable.key, "total_etr_swapped"));
-    const totalEtrSupplyUsed = configRow ? parseFloat(configRow.value) : 0;
-
-    const deposits = await db.select().from(depositsTable);
-    const pendingDeposits = deposits.filter(d => d.status === "pending").length;
-
-    const withdrawals = await db.select().from(withdrawalsTable);
-    const pendingWithdrawals = withdrawals.filter(w => w.status === "pending").length;
-
-    const addresses = await db.select().from(depositAddressesTable);
-    const activeAddresses = addresses.filter(a => a.isActive).length;
-
-    res.json({
-      totalUsers,
-      activeUsers,
-      bannedUsers,
-      totalGemsMined,
-      totalEtrConverted,
-      totalEtrSupplyUsed,
-      totalDepositsUsdt,
-      pendingDeposits,
-      pendingWithdrawals,
-      totalAddresses: addresses.length,
-      activeAddresses,
-    });
-  } catch (err) {
-    console.error("Admin stats error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

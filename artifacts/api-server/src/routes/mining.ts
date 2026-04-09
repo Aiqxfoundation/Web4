@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, usersTable, levelUnlocksTable } from "@workspace/db";
+import { db, usersTable, levelUnlocksTable, referralGemRewardsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../lib/auth.js";
 import {
@@ -16,6 +16,8 @@ import {
 
 const router = Router();
 
+// Referral gem commission rate (10% of claimed gems go to direct upline)
+const REFERRAL_GEM_COMMISSION_RATE = 0.10;
 
 async function getUserLevelData(userId: number) {
   const unlockedLevels = await db
@@ -36,7 +38,6 @@ router.get("/status", requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
 
-    // Mining has not been started yet — return a minimal "not started" state
     if (!user.miningStartedAt) {
       return res.json({
         miningNotStarted: true,
@@ -179,11 +180,27 @@ router.post("/claim", requireAuth, async (req, res) => {
 
     const claimedGems = Math.floor(pendingGems);
     const newBalance = user.gemsBalance + claimedGems;
+    const now = new Date();
 
     await db
       .update(usersTable)
-      .set({ gemsBalance: newBalance, lastClaimedAt: new Date() })
+      .set({ gemsBalance: newBalance, lastClaimedAt: now })
       .where(eq(usersTable.id, user.id));
+
+    // ─── Referral Gem Commission ────────────────────────────────────────────
+    // Credit 10% of claimed gems to direct upline as a referral reward
+    // Reward is locked until BOTH the upline AND this user are KYC verified
+    if (user.referredByUserId) {
+      const rewardGems = Math.floor(claimedGems * REFERRAL_GEM_COMMISSION_RATE);
+      if (rewardGems >= 1) {
+        await db.insert(referralGemRewardsTable).values({
+          uplineUserId: user.referredByUserId as unknown as number,
+          refereeUserId: user.id,
+          gemsAmount: rewardGems,
+        });
+        console.log(`Referral gems: queued ${rewardGems} gems for upline (referredByUserId=${user.referredByUserId}) from @${user.username}`);
+      }
+    }
 
     res.json({ claimedGems, newBalance });
   } catch (err) {

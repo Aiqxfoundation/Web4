@@ -12,7 +12,7 @@ import {
   ArrowLeft, ArrowUpRight, Send, X, Lock, ShieldCheck, ChevronRight,
 } from "lucide-react";
 
-const ETR_LOGO = "/images/etr-logo.png";
+const PTC_LOGO = "/images/etr-logo.png";
 
 function Sheet({ open, onClose, title, children }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode;
@@ -68,7 +68,7 @@ function TransferSheet({ etrBalance, isVerified, onClose }: {
           <div>
             <p className="font-bold text-white">Verification Required</p>
             <p className="text-sm text-white/45 mt-1 leading-relaxed">
-              ETR transfers are only available to verified miners. Mint your Verification Badge to unlock.
+              PTC transfers are only available to verified miners. Mint your Verification Badge to unlock.
             </p>
           </div>
         </div>
@@ -85,10 +85,10 @@ function TransferSheet({ etrBalance, isVerified, onClose }: {
     if (!to.trim()) { toast.error("Enter recipient username"); return; }
     const n = Number(amount);
     if (!n || n <= 0) { toast.error("Enter valid amount"); return; }
-    if (n > etrBalance) { toast.error("Insufficient ETR balance"); return; }
+    if (n > etrBalance) { toast.error("Insufficient PTC balance"); return; }
     transfer({ data: { toUsername: to.trim(), amount: n } }, {
       onSuccess: () => {
-        toast.success(`Sent ${amount} ETR to ${to}`);
+        toast.success(`Sent ${amount} PTC to ${to}`);
         queryClient.invalidateQueries();
         onClose();
       },
@@ -107,7 +107,7 @@ function TransferSheet({ etrBalance, isVerified, onClose }: {
       </div>
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-xs text-white/45 font-medium">Amount (ETR)</label>
+          <label className="text-xs text-white/45 font-medium">Amount (PTC)</label>
           <button type="button" onClick={() => setAmount(String(etrBalance))}
             className="text-xs text-primary font-semibold hover:underline">
             MAX: {etrBalance.toFixed(4)}
@@ -120,11 +120,11 @@ function TransferSheet({ etrBalance, isVerified, onClose }: {
         />
       </div>
       <p className="text-xs text-white/30 leading-relaxed">
-        Transfers are instant and irreversible. Recipient must be an active ETR Mining user.
+        Transfers are instant and irreversible. Recipient must be an active Peridot Mining user.
       </p>
       <button type="submit" disabled={isPending}
         className="w-full py-3.5 rounded-xl bg-primary text-black font-bold text-sm disabled:opacity-40 transition-all hover:brightness-105">
-        {isPending ? "Sending…" : "Send ETR"}
+        {isPending ? "Sending…" : "Send PTC"}
       </button>
     </form>
   );
@@ -183,10 +183,10 @@ export default function EtrPage() {
           <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-2.5">
-          <img src={ETR_LOGO} alt="ETR" className="w-7 h-7 rounded-full" />
+          <img src={PTC_LOGO} alt="PTC" className="w-7 h-7 rounded-full" />
           <div>
-            <p className="text-sm font-bold text-white leading-tight">ETR Token</p>
-            <p className="text-[10px] text-white/35">ETR · BSC Chain</p>
+            <p className="text-sm font-bold text-white leading-tight">PTC Token</p>
+            <p className="text-[10px] text-white/35">PTC · BEP-20</p>
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function EtrPage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <p className="text-xs text-white/35 uppercase tracking-widest mb-2 font-semibold">Balance</p>
           <p className="text-4xl font-black text-white tracking-tight">{etrBalance.toFixed(4)}</p>
-          <p className="text-xs text-white/30 mt-1">ETR Token · ≈ ${(etrBalance * 3.5).toFixed(2)} USD</p>
+          <p className="text-xs text-white/30 mt-1">PTC Token · ≈ ${(etrBalance * 3.5).toFixed(2)} USD</p>
         </motion.div>
 
         {/* Actions */}
@@ -223,7 +223,7 @@ export default function EtrPage() {
 
           {/* Withdraw — always locked until mainnet */}
           <button
-            onClick={() => toast.info("ETR withdrawals will be enabled after mainnet launch.")}
+            onClick={() => toast.info("PTC withdrawals will be enabled after mainnet launch.")}
             className="flex flex-col items-center gap-2 py-5 rounded-2xl bg-white/[0.05] border border-white/[0.07] text-white/40 font-bold text-sm cursor-default"
           >
             <Lock size={20} />
@@ -239,7 +239,7 @@ export default function EtrPage() {
           className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]"
         >
           <Lock size={13} className="text-white/30 shrink-0" />
-          <p className="text-xs text-white/35">ETR withdrawals are enabled after the token mainnet launch.</p>
+          <p className="text-xs text-white/35">PTC withdrawals are enabled after the token mainnet launch.</p>
         </motion.div>
 
         {/* Transfer lock notice */}
@@ -253,7 +253,7 @@ export default function EtrPage() {
           >
             <ShieldCheck size={15} className="text-primary shrink-0" />
             <p className="text-xs text-white/50 text-left flex-1">
-              Mint Verification Badge to unlock ETR transfers
+              Mint Verification Badge to unlock PTC transfers
             </p>
             <ChevronRight size={13} className="text-white/25 shrink-0" />
           </motion.button>
@@ -270,15 +270,15 @@ export default function EtrPage() {
           <p className="px-5 pt-4 pb-2 text-[10px] text-white/30 uppercase tracking-widest font-semibold">History</p>
           {!etrWithdrawals.length ? (
             <div className="py-10 text-center">
-              <p className="text-sm text-white/25">No ETR transactions yet</p>
+              <p className="text-sm text-white/25">No PTC transactions yet</p>
             </div>
           ) : (
             <div className="divide-y divide-white/[0.04]">
               {etrWithdrawals.map((w: any) => (
                 <TxRow
                   key={w.id}
-                  type="ETR Withdrawal"
-                  amount={`${w.amount} ETR`}
+                  type="PTC Withdrawal"
+                  amount={`${w.amount} PTC`}
                   status={w.status}
                   date={format(new Date(w.createdAt), "MMM d · HH:mm")}
                   isOut
@@ -289,7 +289,7 @@ export default function EtrPage() {
         </motion.div>
       </div>
 
-      <Sheet open={sheet === "transfer"} onClose={() => setSheet(null)} title="Transfer ETR">
+      <Sheet open={sheet === "transfer"} onClose={() => setSheet(null)} title="Transfer PTC">
         <TransferSheet etrBalance={etrBalance} isVerified={isVerified} onClose={() => setSheet(null)} />
       </Sheet>
     </div>

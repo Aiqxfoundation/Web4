@@ -79,10 +79,10 @@ export default function Auth({ mode: initialMode }: { mode: 'login' | 'signup' |
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3 mb-2">
             <img src={`${import.meta.env.BASE_URL}images/logo-icon.png`} alt="Logo" className="w-10 h-10 object-contain" />
-            <h1 className="text-xl font-bold text-foreground">ETR Mining</h1>
+            <h1 className="text-xl font-bold text-foreground">Peridot Mining</h1>
           </div>
           <p className="text-muted-foreground text-sm">
-            {mode === 'login' ? 'Login to your ETR mining account' : mode === 'signup' ? 'Create an account to start mining gems' : 'Reset your lost password'}
+            {mode === 'login' ? 'Login to your Peridot Mining account' : mode === 'signup' ? 'Create an account to start mining Peridot Gems' : 'Reset your lost password'}
           </p>
         </div>
 

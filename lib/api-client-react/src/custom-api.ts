@@ -59,13 +59,46 @@ export interface AdminStatsFull {
   activeAddresses: number;
 }
 
+// ─── Referral types ─────────────────────────────────────────────────
+
+export interface ReferralUser {
+  username: string;
+  isActive: boolean;
+  isKycVerified: boolean;
+  joinedAt: string;
+  claimableGems: number;
+  lockedGems: number;
+}
+
+export interface ReferralData {
+  referralCode: string;
+  totalReferrals: number;
+  totalRewardGems: number;
+  totalClaimableGems: number;
+  totalLockedGems: number;
+  uplineIsVerified: boolean;
+  level1: ReferralUser[];
+  level2: ReferralUser[];
+}
+
+export interface ReferralStats {
+  referralCode: string;
+  totalReferrals: number;
+  totalRewardGems: number;
+  totalClaimableGems: number;
+  totalLockedGems: number;
+  uplineIsVerified: boolean;
+  level1: ReferralUser[];
+  level2: ReferralUser[];
+}
+
 // ─── Deposit Address — Generate ────────────────────────────────────
 
 export const useGenerateDepositAddress = (options?: { query?: any }) => {
   return useQuery<GeneratedAddress, Error>({
     queryKey: ["/api/deposits/generate-address"],
     queryFn: () => customFetch<GeneratedAddress>("/api/deposits/generate-address"),
-    enabled: false, // only fetch on demand
+    enabled: false,
     retry: false,
     ...options?.query,
   });
@@ -302,11 +335,6 @@ export const useInvestInLevel = (options?: any) => {
 };
 
 // ─── Referrals ────────────────────────────────────────────────────────
-export interface ReferralStats {
-  referralCode: string;
-  totalReferrals: number;
-  totalRewardGems: number;
-}
 
 export const useGetReferrals = (options?: { query?: any }) => {
   return useQuery<ReferralStats, Error>({
@@ -322,6 +350,16 @@ export const useApplyReferral = (options?: any) => {
       customFetch<{ message: string }>("/api/referrals/apply", {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    ...options,
+  });
+};
+
+export const useClaimReferralGems = (options?: any) => {
+  return useMutation<{ claimedGems: number; newGemsBalance: number; message: string }, Error, void>({
+    mutationFn: () =>
+      customFetch<{ claimedGems: number; newGemsBalance: number; message: string }>("/api/referrals/claim-gems", {
+        method: "POST",
       }),
     ...options,
   });

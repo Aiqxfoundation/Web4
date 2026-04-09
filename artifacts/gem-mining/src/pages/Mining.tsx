@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useGetMiningStatus, useClaimGems, useStartMining } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
-import { ChevronRight, TrendingUp, Clock, BarChart3, Pickaxe } from "lucide-react";
+import { ChevronRight, TrendingUp, Clock, BarChart3, Pickaxe, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 import { GemIcon } from "@/components/GemIcon";
 
@@ -104,19 +104,19 @@ const pad = (n: number) => String(n).padStart(2, "0");
 // ─── Gem Particle System ───────────────────────────────────────────────────────
 interface GemParticle {
   id: number;
-  x: number;       // left % (0–88)
-  y: number;       // top % (0–65)
-  size: number;    // px
-  floatY: number;  // upward travel px (negative)
-  dur: number;     // float duration seconds
-  lifetime: number; // ms before removal
-  wobble: number;  // slight horizontal drift px
+  x: number;
+  y: number;
+  size: number;
+  floatY: number;
+  dur: number;
+  lifetime: number;
+  wobble: number;
 }
 
 let _pid = 0;
 
 function mkParticle(): GemParticle {
-  const size = 14 + Math.floor(Math.random() * 36); // 14–50 px
+  const size = 14 + Math.floor(Math.random() * 36);
   return {
     id: ++_pid,
     x:  4  + Math.random() * 84,
@@ -129,7 +129,6 @@ function mkParticle(): GemParticle {
   };
 }
 
-// Pre-computed static positions for idle state (small gems, full panel coverage)
 const IDLE_GEMS = [
   { x: 3,  y: 5,  size: 11 }, { x: 14, y: 2,  size: 9  }, { x: 24, y: 8,  size: 13 },
   { x: 35, y: 3,  size: 10 }, { x: 47, y: 7,  size: 12 }, { x: 58, y: 2,  size: 9  },
@@ -150,15 +149,12 @@ const IDLE_GEMS = [
 
 function FloatingGems({ active }: { active: boolean }) {
   const [gems, setGems] = useState<GemParticle[]>([]);
-  // Track per-gem removal timeouts so we can cancel them all on stop
   const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const addGem = useCallback(() => {
     const g = mkParticle();
     setGems(prev => [...prev, g]);
-
-    // Schedule this gem's own removal
     const t = setTimeout(() => {
       setGems(prev => prev.filter(p => p.id !== g.id));
       timersRef.current.delete(g.id);
@@ -168,84 +164,47 @@ function FloatingGems({ active }: { active: boolean }) {
 
   useEffect(() => {
     if (!active) {
-      // Stop spawning
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      // Cancel all removal timers and wipe gems immediately → fully idle
       timersRef.current.forEach(t => clearTimeout(t));
       timersRef.current.clear();
       setGems([]);
       return;
     }
-
-    // Initial staggered burst so the panel isn't empty on start
     const INITIAL = 6;
-    for (let i = 0; i < INITIAL; i++) {
-      setTimeout(addGem, i * 120);
-    }
-
-    // Continuous spawning while active
+    for (let i = 0; i < INITIAL; i++) { setTimeout(addGem, i * 120); }
     intervalRef.current = setInterval(addGem, 620);
-
     return () => {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     };
-    // addGem is stable (useCallback with no deps), safe to omit from deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
   return (
-    <div
-      className="relative w-full overflow-hidden select-none"
-      style={{ height: 160, borderRadius: 12 }}
-    >
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", borderRadius: 12 }}
-      />
-
-      {/* Glow bloom — only when active */}
+    <div className="relative w-full overflow-hidden select-none" style={{ height: 160, borderRadius: 12 }}>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", borderRadius: 12 }} />
       <AnimatePresence>
         {active && (
-          <motion.div
-            key="bloom"
-            className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.35, 0.7, 0.35] }}
-            exit={{ opacity: 0 }}
+          <motion.div key="bloom" className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }} animate={{ opacity: [0.35, 0.7, 0.35] }} exit={{ opacity: 0 }}
             transition={{ duration: 3.5, repeat: active ? Infinity : 0, ease: "easeInOut" }}
-            style={{
-              borderRadius: 12,
-              background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249,115,22,0.10) 0%, transparent 80%)",
-            }}
+            style={{ borderRadius: 12, background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249,115,22,0.10) 0%, transparent 80%)" }}
           />
         )}
       </AnimatePresence>
-
-      {/* Gem particles */}
       <AnimatePresence>
         {gems.map(g => (
-          <motion.div
-            key={g.id}
-            className="absolute pointer-events-none"
+          <motion.div key={g.id} className="absolute pointer-events-none"
             style={{ left: `${g.x}%`, top: `${g.y}%` }}
             initial={{ opacity: 0, y: 0, x: 0, scale: 0.3 }}
             animate={{ opacity: 1, y: g.floatY, x: g.wobble, scale: 1 }}
             exit={{ opacity: 0, scale: 0.2, transition: { duration: 0.35 } }}
-            transition={{ duration: g.dur, ease: "easeOut" }}
-          >
+            transition={{ duration: g.dur, ease: "easeOut" }}>
             <GemIcon size={g.size} />
           </motion.div>
         ))}
       </AnimatePresence>
-
-      {/* Idle state — static small gems, no animation */}
       {!active && IDLE_GEMS.map((g, i) => (
-        <div
-          key={i}
-          className="absolute pointer-events-none"
-          style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: 0.22 }}
-        >
+        <div key={i} className="absolute pointer-events-none" style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: 0.22 }}>
           <GemIcon size={g.size} />
         </div>
       ))}
@@ -254,9 +213,7 @@ function FloatingGems({ active }: { active: boolean }) {
 }
 
 // ─── Circular Session Ring ─────────────────────────────────────────────────────
-function SessionRing({
-  pct, h, m, s, active, endTimeStr,
-}: {
+function SessionRing({ pct, h, m, s, active, endTimeStr }: {
   pct: number; h: number; m: number; s: number; active: boolean; endTimeStr: string | null;
 }) {
   const R = 54, C = 2 * Math.PI * R;
@@ -267,13 +224,8 @@ function SessionRing({
       <div className="relative" style={{ width: 136, height: 136 }}>
         <svg width="136" height="136" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
           <circle cx="68" cy="68" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
-          <motion.circle
-            cx="68" cy="68" r={R}
-            fill="none"
-            stroke="url(#ring-grad)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeDasharray={C}
+          <motion.circle cx="68" cy="68" r={R} fill="none" stroke="url(#ring-grad)" strokeWidth="6"
+            strokeLinecap="round" strokeDasharray={C}
             animate={{ strokeDashoffset: C - filled }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           />
@@ -285,10 +237,8 @@ function SessionRing({
           </defs>
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-          <span
-            className="text-lg font-black font-mono tabular-nums leading-none tracking-tight"
-            style={{ color: active ? "#f97316" : "rgba(255,255,255,0.25)" }}
-          >
+          <span className="text-lg font-black font-mono tabular-nums leading-none tracking-tight"
+            style={{ color: active ? "#f97316" : "rgba(255,255,255,0.25)" }}>
             {pad(h)}:{pad(m)}:{pad(s)}
           </span>
           <span className="text-[9px] uppercase tracking-[0.15em] text-white/25 font-semibold">
@@ -304,32 +254,22 @@ function SessionRing({
 }
 
 // ─── Stat Pill ─────────────────────────────────────────────────────────────────
-function StatPill({
-  icon, label, value, sub, accent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: boolean;
+function StatPill({ icon, label, value, sub, accent }: {
+  icon: React.ReactNode; label: string; value: string; sub?: string; accent?: boolean;
 }) {
   return (
-    <div
-      className="flex-1 flex flex-col gap-2 rounded-2xl px-4 py-4"
+    <div className="flex-1 flex flex-col gap-2 rounded-2xl px-4 py-4"
       style={{
         background: accent
           ? "linear-gradient(135deg, rgba(249,115,22,0.12) 0%, rgba(249,115,22,0.04) 100%)"
           : "rgba(255,255,255,0.025)",
         border: accent ? "1px solid rgba(249,115,22,0.2)" : "1px solid rgba(255,255,255,0.06)",
-      }}
-    >
-      <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center"
+      }}>
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center"
         style={{
           background: accent ? "rgba(249,115,22,0.15)" : "rgba(255,255,255,0.04)",
           border: accent ? "1px solid rgba(249,115,22,0.25)" : "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
+        }}>
         <span style={{ color: accent ? "#f97316" : "rgba(255,255,255,0.3)" }}>{icon}</span>
       </div>
       <div>
@@ -338,6 +278,91 @@ function StatPill({
         {sub && <p className="text-[10px] text-white/20 mt-0.5">{sub}</p>}
       </div>
     </div>
+  );
+}
+
+// ─── Session Complete Banner ────────────────────────────────────────────────────
+function SessionCompleteBanner({ liveGems, isPending, onClaim }: {
+  liveGems: number; isPending: boolean; onClaim: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="relative rounded-3xl overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, #0f1a0a 0%, #0a140a 100%)",
+        border: "1px solid rgba(74,222,128,0.25)",
+        boxShadow: "0 0 40px rgba(74,222,128,0.08), 0 20px 40px rgba(0,0,0,0.4)",
+      }}
+    >
+      {/* Glow */}
+      <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl pointer-events-none"
+        style={{ background: "rgba(74,222,128,0.08)" }} />
+
+      <div className="relative px-5 py-5">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <motion.div
+            animate={{ scale: [1, 1.12, 1] }}
+            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center"
+            style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)" }}
+          >
+            <Sparkles size={20} style={{ color: "#4ade80" }} />
+          </motion.div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold" style={{ color: "rgba(74,222,128,0.6)" }}>Session Complete</p>
+            <p className="text-base font-black text-white leading-tight">Gems Ready to Claim!</p>
+          </div>
+        </div>
+
+        {/* Gem count */}
+        <div className="flex items-baseline gap-2 mb-5">
+          <motion.span
+            animate={{ opacity: [0.8, 1, 0.8] }}
+            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+            className="text-4xl font-black font-mono tabular-nums"
+            style={{ color: "#4ade80" }}
+          >
+            {formatGems(liveGems)}
+          </motion.span>
+          <span className="text-sm font-bold text-white/40">gems waiting</span>
+        </div>
+
+        {/* Claim button */}
+        <motion.button
+          onClick={onClaim}
+          disabled={isPending}
+          whileTap={{ scale: 0.97 }}
+          className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%)",
+            boxShadow: "0 6px 28px rgba(74,222,128,0.35), 0 1px 0 rgba(255,255,255,0.2) inset",
+            color: "#fff",
+          }}
+        >
+          {!isPending && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              animate={{ x: ["-100%", "200%"] }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", repeatDelay: 1.5 }}
+              style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)", width: "50%" }}
+            />
+          )}
+          {isPending ? (
+            <>
+              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+                style={{ width: 16, height: 16, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
+              Processing Claim…
+            </>
+          ) : (
+            <><GemIcon size={18} /> Claim {formatGems(liveGems)} Gems &amp; Restart Mining</>
+          )}
+        </motion.button>
+        <p className="text-[10px] text-white/25 text-center mt-3">Mining restarts automatically after claiming</p>
+      </div>
+    </motion.div>
   );
 }
 
@@ -367,6 +392,7 @@ export default function Mining() {
 
   const perSecond  = dailyRate / 86_400;
   const hasPending = liveGems > 0;
+  const sessionEnded = !isMiningActive && hasPending;
   const stoppedAndEmpty = !isMiningActive && liveGems <= 0;
   const progressPct = totalSessionMs > 0
     ? Math.max(0, Math.min(100, (1 - remainingMs / totalSessionMs) * 100))
@@ -379,7 +405,7 @@ export default function Mining() {
   const handleStartMining = useCallback(() => {
     startMine(undefined, {
       onSuccess: () => {
-        toast.success("Mining started! Gems will accumulate over your session.");
+        toast.success("Mining started! Peridot Gems will accumulate over your session.");
         queryClient.invalidateQueries();
       },
       onError: (err: any) => toast.error(err.error || "Could not start mining"),
@@ -395,7 +421,9 @@ export default function Mining() {
       onSuccess: (res: any) => {
         setClaimFlash(true);
         setTimeout(() => setClaimFlash(false), 600);
-        toast.success(`Claimed ${formatGems(res.claimedGems)} gems — mining restarted`);
+        toast.success(`Claimed ${formatGems(res.claimedGems)} Peridot Gems — mining restarted!`, {
+          duration: 4000,
+        });
         queryClient.invalidateQueries();
       },
       onError: (err: any) => toast.error(err.error || err.message || "Claim failed"),
@@ -422,15 +450,12 @@ export default function Mining() {
 
   if (!status) return null;
 
-  // ── Mining not started yet — show Start Mining screen ──────────────────────
+  // ── Mining not started yet ──────────────────────────────────────────────────
   if (miningNotStarted) {
     return (
       <div className="max-w-md mx-auto px-4 py-10 pb-28 md:pb-8 flex flex-col items-center justify-center min-h-[70vh] gap-6">
-        {/* Idle gem field */}
-        <div
-          className="relative w-full overflow-hidden rounded-3xl"
-          style={{ height: 180, background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", border: "1px solid rgba(255,255,255,0.06)" }}
-        >
+        <div className="relative w-full overflow-hidden rounded-3xl"
+          style={{ height: 180, background: "linear-gradient(160deg, #0a0b12 0%, #0f1020 100%)", border: "1px solid rgba(255,255,255,0.06)" }}>
           {IDLE_GEMS.map((g, i) => (
             <div key={i} className="absolute pointer-events-none" style={{ left: `${g.x}%`, top: `${g.y}%`, opacity: 0.18 }}>
               <GemIcon size={g.size} />
@@ -444,15 +469,13 @@ export default function Mining() {
           </div>
         </div>
 
-        {/* Copy */}
         <div className="text-center px-2">
           <h2 className="text-2xl font-black text-white tracking-tight mb-2">Ready to Mine?</h2>
           <p className="text-sm text-white/35 leading-relaxed">
-            Start your mining session to begin accumulating gems. Free users earn gems every 3-hour cycle.
+            Start your first Peridot Mining session to begin accumulating gems. Free users earn gems every 3-hour cycle.
           </p>
         </div>
 
-        {/* Start button */}
         <motion.button
           onClick={handleStartMining}
           disabled={isStarting}
@@ -482,7 +505,7 @@ export default function Mining() {
         </motion.button>
 
         <p className="text-[10px] text-white/20 text-center">
-          Free users earn gems in 3-hour sessions · Minimum 3 hours before claiming
+          Free users earn gems in 3-hour sessions · Peridot Mining
         </p>
       </div>
     );
@@ -491,23 +514,31 @@ export default function Mining() {
   return (
     <div className="max-w-md mx-auto px-4 py-5 pb-28 md:pb-8 space-y-3">
 
-      {/* ════════════════════════════════════════════════════════════════════════
-          HERO CARD
-      ════════════════════════════════════════════════════════════════════════ */}
+      {/* ══ SESSION COMPLETE BANNER — shown prominently when session ends ══ */}
+      <AnimatePresence>
+        {sessionEnded && (
+          <SessionCompleteBanner
+            liveGems={liveGems}
+            isPending={isPending}
+            onClaim={handleClaim}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ════════ HERO CARD ════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative rounded-3xl overflow-hidden"
         style={{
           background: "linear-gradient(160deg, #0d0e15 0%, #111320 60%, #0c0d14 100%)",
-          border: `1px solid ${isMiningActive ? "rgba(249,115,22,0.2)" : "rgba(255,255,255,0.07)"}`,
+          border: `1px solid ${isMiningActive ? "rgba(249,115,22,0.2)" : sessionEnded ? "rgba(74,222,128,0.12)" : "rgba(255,255,255,0.07)"}`,
           boxShadow: isMiningActive
             ? "0 0 60px rgba(249,115,22,0.08), 0 20px 40px rgba(0,0,0,0.4)"
             : "0 20px 40px rgba(0,0,0,0.35)",
           transition: "border-color 0.5s, box-shadow 0.5s",
         }}
       >
-        {/* Ambient blobs */}
         {isMiningActive && (
           <>
             <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl pointer-events-none"
@@ -517,16 +548,14 @@ export default function Mining() {
           </>
         )}
 
-        {/* ── Floating gems scene ─────────────────────────────────────────── */}
+        {/* Floating gems scene */}
         <div className="px-4 pt-4 pb-2">
           <FloatingGems active={isMiningActive} />
         </div>
 
-        {/* ── Live gem counter + session ring ─────────────────────────────── */}
-        <div
-          className="flex items-center gap-4 px-5 pt-5 pb-5"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-        >
+        {/* Live gem counter + session ring */}
+        <div className="flex items-center gap-4 px-5 pt-5 pb-5"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
           <div className="flex-1 min-w-0">
             <p className="text-[9px] uppercase tracking-[0.22em] text-white/22 font-semibold mb-2">
               Session Gems
@@ -538,7 +567,9 @@ export default function Mining() {
               style={{
                 background: isMiningActive
                   ? "linear-gradient(135deg, #fff 40%, rgba(249,115,22,0.7) 100%)"
-                  : "rgba(255,255,255,0.25)",
+                  : sessionEnded
+                    ? "linear-gradient(135deg, #fff 40%, rgba(74,222,128,0.8) 100%)"
+                    : "rgba(255,255,255,0.25)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -556,6 +587,15 @@ export default function Mining() {
                     <span className="text-white/15"> gems/sec</span>
                   </span>
                 </div>
+              ) : sessionEnded ? (
+                <motion.span
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="text-[11px] font-semibold"
+                  style={{ color: "rgba(74,222,128,0.8)" }}
+                >
+                  Session complete — claim above to restart
+                </motion.span>
               ) : (
                 <span className="text-[11px] text-white/18">
                   {hasPending ? "Session ended — claim to restart" : "Deposit USDT to start mining"}
@@ -565,117 +605,96 @@ export default function Mining() {
           </div>
 
           <div className="shrink-0">
-            <SessionRing
-              pct={progressPct}
-              h={h} m={m} s={s}
-              active={isMiningActive}
-              endTimeStr={endTimeStr}
-            />
+            <SessionRing pct={progressPct} h={h} m={m} s={s} active={isMiningActive} endTimeStr={endTimeStr} />
           </div>
         </div>
 
-        {/* ── Stats 2-col grid ────────────────────────────────────────────── */}
+        {/* Stats 2-col grid */}
         <div className="grid grid-cols-2 px-4 py-4 gap-3">
-          <StatPill
-            icon={<GemIcon size={14} />}
-            label="Total Balance"
-            value={formatGems(status.gemsBalance)}
-            sub="gems"
-            accent
-          />
-          <StatPill
-            icon={<BarChart3 size={14} />}
-            label="Mining Rate"
-            value={formatGems(dailyRate)}
-            sub="gems / day"
-          />
+          <StatPill icon={<GemIcon size={14} />} label="Total Balance" value={formatGems(status.gemsBalance)} sub="gems" accent />
+          <StatPill icon={<BarChart3 size={14} />} label="Mining Rate" value={formatGems(dailyRate)} sub="gems / day" />
         </div>
 
-        {/* ── Progress strip ───────────────────────────────────────────────── */}
+        {/* Progress strip */}
         <div className="px-5 pb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
           <div className="flex items-center justify-between mb-2 pt-4">
             <span className="text-[9px] uppercase tracking-[0.14em] text-white/20 font-semibold flex items-center gap-1.5">
               <Clock size={9} /> Session Progress
             </span>
-            <span
-              className="text-[10px] font-bold font-mono"
-              style={{ color: isMiningActive ? "rgba(249,115,22,0.6)" : "rgba(255,255,255,0.15)" }}
-            >
-              {progressPct.toFixed(0)}%
+            <span className="text-[10px] font-bold font-mono"
+              style={{ color: isMiningActive ? "rgba(249,115,22,0.6)" : sessionEnded ? "rgba(74,222,128,0.6)" : "rgba(255,255,255,0.15)" }}>
+              {sessionEnded ? "100%" : `${progressPct.toFixed(0)}%`}
             </span>
           </div>
-          <div className="w-full rounded-full overflow-hidden"
-            style={{ height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 999 }}>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.04)", borderRadius: 999 }}>
             <motion.div
               className="h-full"
               style={{
                 background: isMiningActive
                   ? "linear-gradient(90deg, rgba(249,115,22,0.6) 0%, #f97316 60%, #fb923c 100%)"
-                  : "rgba(255,255,255,0.08)",
+                  : sessionEnded
+                    ? "linear-gradient(90deg, rgba(74,222,128,0.6) 0%, #4ade80 100%)"
+                    : "rgba(255,255,255,0.08)",
                 borderRadius: 999,
-                boxShadow: isMiningActive ? "0 0 8px rgba(249,115,22,0.5)" : "none",
+                boxShadow: isMiningActive ? "0 0 8px rgba(249,115,22,0.5)" : sessionEnded ? "0 0 8px rgba(74,222,128,0.4)" : "none",
               }}
-              animate={{ width: `${progressPct}%` }}
+              animate={{ width: sessionEnded ? "100%" : `${progressPct}%` }}
               transition={{ duration: 0.9, ease: "easeOut" }}
             />
           </div>
         </div>
       </motion.div>
 
-      {/* ── Claim Button ───────────────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
-        <motion.button
-          onClick={handleClaim}
-          disabled={isPending || stoppedAndEmpty}
-          whileTap={{ scale: 0.98 }}
-          animate={claimFlash ? { scale: [1, 1.04, 1] } : {}}
-          transition={{ duration: 0.22 }}
-          className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          style={
-            hasPending
-              ? {
-                  background: "linear-gradient(135deg, #ea6c10 0%, #f97316 50%, #fb923c 100%)",
-                  boxShadow: "0 6px 24px rgba(249,115,22,0.4), 0 1px 0 rgba(255,255,255,0.2) inset",
-                  color: "#fff",
-                }
-              : {
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(255,255,255,0.22)",
-                }
-          }
-        >
-          {hasPending && !isPending && (
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              animate={{ x: ["-100%", "200%"] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut", repeatDelay: 2 }}
-              style={{
-                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)",
-                width: "50%",
-              }}
-            />
-          )}
-          {isPending ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                style={{ width: 16, height: 16, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }}
-              />
-              Processing…
-            </>
-          ) : !isMiningActive && hasPending ? (
-            <><GemIcon size={16} /> Claim &amp; Restart Mining</>
-          ) : hasPending ? (
-            <><GemIcon size={16} /> Claim {formatGems(liveGems)} Gems</>
-          ) : (
-            <><Pickaxe size={16} /> Mining in Progress</>
-          )}
-        </motion.button>
-      </motion.div>
+      {/* ── Claim Button (shown only when mining active or no pending gems) ── */}
+      <AnimatePresence>
+        {!sessionEnded && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: 0.07 }}>
+            <motion.button
+              onClick={handleClaim}
+              disabled={isPending || stoppedAndEmpty || !hasPending}
+              whileTap={{ scale: 0.98 }}
+              animate={claimFlash ? { scale: [1, 1.04, 1] } : {}}
+              transition={{ duration: 0.22 }}
+              className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={
+                hasPending && isMiningActive
+                  ? {
+                      background: "linear-gradient(135deg, #ea6c10 0%, #f97316 50%, #fb923c 100%)",
+                      boxShadow: "0 6px 24px rgba(249,115,22,0.4), 0 1px 0 rgba(255,255,255,0.2) inset",
+                      color: "#fff",
+                    }
+                  : {
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      color: "rgba(255,255,255,0.22)",
+                    }
+              }
+            >
+              {hasPending && isMiningActive && !isPending && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  animate={{ x: ["-100%", "200%"] }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut", repeatDelay: 2 }}
+                  style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)", width: "50%" }}
+                />
+              )}
+              {isPending ? (
+                <>
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+                    style={{ width: 16, height: 16, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
+                  Processing…
+                </>
+              ) : hasPending && isMiningActive ? (
+                <><GemIcon size={16} /> Claim {formatGems(liveGems)} Gems</>
+              ) : (
+                <><Pickaxe size={16} /> Mining in Progress…</>
+              )}
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ── Upgrade / Level Card ───────────────────────────────────────────── */}
+      {/* ── Upgrade / Level Card ─────────────────────────────────────────────── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }}>
         {isFreeUser ? (
           <button

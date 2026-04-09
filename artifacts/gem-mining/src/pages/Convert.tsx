@@ -4,16 +4,14 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useGetMyConversions, useCreateConversion, useGetSystemStats, useGetWallet } from "@workspace/api-client-react";
-import { formatCurrency, formatGems, cn } from "@/lib/utils";
-import { ArrowDown, History, ChevronDown, ArrowRight, Zap, BarChart3 } from "lucide-react";
+import { formatGems, cn } from "@/lib/utils";
+import { ArrowDown, History, ChevronDown, ArrowRight, Zap, BarChart3, TrendingUp, Gem } from "lucide-react";
 import { GemIcon } from "@/components/GemIcon";
 
-const ETR_LOGO  = "/images/etr-logo.png";
-const USDT_LOGO = "/images/usdt-logo.png";
+const PTC_LOGO = "/images/etr-logo.png";
 
 export default function Convert() {
   const [amount, setAmount]           = useState("");
-  const [outputType, setOutputType]   = useState<"etr" | "usdt">("etr");
   const [showHistory, setShowHistory] = useState(false);
   const queryClient                   = useQueryClient();
 
@@ -22,26 +20,20 @@ export default function Convert() {
   const { data: wallet }   = useGetWallet();
   const { mutate: convert, isPending } = useCreateConversion();
 
-  const ETR_PRICE_USD      = 3.5;
-  const USDT_PRICE_PER_ETR = 2.5;
-  const currentRate        = stats?.conversionRateGemsPerEtr || 100000;
-  const gemBalance         = wallet?.gemsBalance ?? 0;
-  const numAmount          = Number(amount);
-  const expectedEtr        = numAmount > 0 ? numAmount / currentRate : 0;
-  const expectedUsdt       = expectedEtr * USDT_PRICE_PER_ETR;
-  const expectedEtrUsd     = expectedEtr * ETR_PRICE_USD;
-  const outputValue        = outputType === "etr" ? expectedEtr : expectedUsdt;
-  const outputLabel        = outputType === "etr" ? "ETR" : "USDT";
-  const outputUsd          = outputType === "etr" ? expectedEtrUsd : expectedUsdt;
-  const isETR              = outputType === "etr";
+  const PTC_PRICE_USD = 3.5;
+  const currentRate   = stats?.conversionRateGemsPerEtr || 100000;
+  const gemBalance    = wallet?.gemsBalance ?? 0;
+  const numAmount     = Number(amount);
+  const expectedPtc   = numAmount > 0 ? numAmount / currentRate : 0;
+  const expectedUsd   = expectedPtc * PTC_PRICE_USD;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (numAmount <= 0) { toast.error("Enter a valid amount"); return; }
     if (numAmount > gemBalance) { toast.error("Insufficient gem balance"); return; }
-    convert({ data: { gemsAmount: numAmount, outputType } }, {
+    convert({ data: { gemsAmount: numAmount, outputType: "etr" } }, {
       onSuccess: () => {
-        toast.success("Gems converted successfully!");
+        toast.success("Gems converted to PTC successfully!");
         setAmount("");
         queryClient.invalidateQueries();
       },
@@ -65,8 +57,10 @@ export default function Convert() {
       >
         <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl pointer-events-none"
           style={{ background: "rgba(249,115,22,0.07)" }} />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-3xl pointer-events-none"
+          style={{ background: "rgba(124,58,237,0.05)" }} />
 
-        <div className="px-5 pt-5 pb-4">
+        <div className="px-5 pt-5 pb-4 relative">
           <p className="text-[9px] uppercase tracking-[0.22em] text-white/25 font-semibold mb-3">Available to Convert</p>
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
@@ -79,7 +73,7 @@ export default function Convert() {
                 {formatGems(gemBalance)}
               </p>
               <p className="text-[11px] text-white/25 mt-1 font-mono">
-                {formatGems(currentRate)} gems = 1 ETR
+                {formatGems(currentRate)} gems = 1 PTC
                 {stats?.isDynamicRateActive && (
                   <span className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide"
                     style={{ background: "rgba(249,115,22,0.15)", color: "#f97316", border: "1px solid rgba(249,115,22,0.2)" }}>
@@ -90,36 +84,43 @@ export default function Convert() {
             </div>
           </div>
         </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 divide-x" style={{ borderTop: "1px solid rgba(255,255,255,0.04)", divideColor: "rgba(255,255,255,0.04)" }}>
+          {[
+            { label: "PTC Price", value: "$3.50" },
+            { label: "Your PTC", value: wallet ? (wallet.etrBalance ?? 0).toFixed(4) : "—" },
+            { label: "Rate", value: `${formatGems(currentRate)}:1` },
+          ].map((stat, i) => (
+            <div key={i} className="px-4 py-3 text-center" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+              <p className="text-[9px] uppercase tracking-widest text-white/20 font-semibold">{stat.label}</p>
+              <p className="text-xs font-black font-mono text-white/70 mt-0.5">{stat.value}</p>
+            </div>
+          ))}
+        </div>
       </motion.div>
 
-      {/* ── Output selector ──────────────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 gap-3">
-        {([
-          { type: "etr" as const,  logo: ETR_LOGO,  label: "ETR Token",  sub: "3.5× · Best value", accent: "#f97316", border: "rgba(249,115,22,0.28)" },
-          { type: "usdt" as const, logo: USDT_LOGO, label: "USDT",       sub: "2.5× · Stable",     accent: "#26a17b", border: "rgba(38,161,123,0.28)" },
-        ]).map(opt => (
-          <button key={opt.type} onClick={() => setOutputType(opt.type)}
-            className="relative flex flex-col gap-3 p-4 rounded-2xl text-left transition-all"
-            style={{
-              background: outputType === opt.type
-                ? `linear-gradient(135deg, ${opt.accent}12 0%, ${opt.accent}06 100%)`
-                : "rgba(255,255,255,0.025)",
-              border: `1px solid ${outputType === opt.type ? opt.border : "rgba(255,255,255,0.06)"}`,
-              opacity: outputType === opt.type ? 1 : 0.55,
-            }}
-          >
-            <img src={opt.logo} alt={opt.type} className="w-9 h-9 rounded-full" />
-            <div>
-              <p className="text-sm font-bold text-white">{opt.label}</p>
-              <p className="text-[10px] text-white/35 mt-0.5">{opt.sub}</p>
+      {/* ── Output type — PTC only ──────────────────────────────────────────── */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}>
+        <div
+          className="flex items-center gap-4 p-4 rounded-3xl"
+          style={{
+            background: "linear-gradient(135deg, rgba(249,115,22,0.10) 0%, rgba(249,115,22,0.04) 100%)",
+            border: "1px solid rgba(249,115,22,0.25)",
+          }}
+        >
+          <img src={PTC_LOGO} alt="PTC" className="w-10 h-10 rounded-full shrink-0" />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-black text-white">PTC Token</p>
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-full" style={{ background: "rgba(249,115,22,0.18)", color: "#f97316", border: "1px solid rgba(249,115,22,0.25)" }}>BEP-20</span>
             </div>
-            {outputType === opt.type && (
-              <div className="absolute top-3 right-3 w-2 h-2 rounded-full"
-                style={{ background: opt.accent, boxShadow: `0 0 6px ${opt.accent}` }} />
-            )}
-          </button>
-        ))}
+            <p className="text-[11px] text-white/40 mt-0.5">Peridot Token · $3.50/PTC · Max Value</p>
+          </div>
+          <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#f97316", boxShadow: "0 0 10px rgba(249,115,22,0.6)" }}>
+            <div className="w-2 h-2 rounded-full bg-white" />
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Conversion form ──────────────────────────────────────────────────── */}
@@ -154,42 +155,46 @@ export default function Convert() {
               </div>
             </div>
             {numAmount > gemBalance && (
-              <p className="text-[11px] text-red-400 mt-1.5">⚠ Exceeds balance by {formatGems(numAmount - gemBalance)}</p>
+              <p className="text-[11px] text-red-400 mt-1.5">Exceeds balance by {formatGems(numAmount - gemBalance)}</p>
             )}
           </div>
 
           {/* Arrow divider */}
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-1">
             <div className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <ArrowDown size={14} className="text-white/30" />
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}>
+              <ArrowDown size={14} style={{ color: "#f97316" }} />
             </div>
+            {numAmount > 0 && numAmount <= gemBalance && (
+              <span className="text-[10px] font-semibold" style={{ color: "rgba(249,115,22,0.5)" }}>
+                {expectedPtc.toFixed(6)} PTC
+              </span>
+            )}
           </div>
 
           {/* Output preview */}
           <div className="rounded-2xl p-4 transition-all"
             style={{
-              background: isETR ? "rgba(249,115,22,0.06)" : "rgba(38,161,123,0.06)",
-              border: `1px solid ${isETR ? "rgba(249,115,22,0.18)" : "rgba(38,161,123,0.18)"}`,
+              background: "rgba(249,115,22,0.06)",
+              border: `1px solid ${numAmount > 0 && numAmount <= gemBalance ? "rgba(249,115,22,0.22)" : "rgba(255,255,255,0.06)"}`,
             }}>
             <div className="flex items-center gap-3">
-              <img src={isETR ? ETR_LOGO : USDT_LOGO} alt={outputLabel} className="w-9 h-9 rounded-full shrink-0" />
+              <img src={PTC_LOGO} alt="PTC" className="w-9 h-9 rounded-full shrink-0" />
               <div className="flex-1">
                 <p className="text-[10px] text-white/30 font-semibold uppercase tracking-widest">You Receive</p>
-                <p className="text-2xl font-black font-mono tabular-nums leading-tight"
-                  style={{ color: isETR ? "#f97316" : "#26a17b" }}>
-                  {numAmount > 0
-                    ? isETR ? `${outputValue.toFixed(4)} ETR` : formatCurrency(outputValue)
-                    : `— ${outputLabel}`}
+                <p className="text-2xl font-black font-mono tabular-nums leading-tight" style={{ color: "#f97316" }}>
+                  {numAmount > 0 && numAmount <= gemBalance
+                    ? `${expectedPtc.toFixed(4)} PTC`
+                    : "— PTC"}
                 </p>
               </div>
-              {numAmount > 0 && (
+              {numAmount > 0 && numAmount <= gemBalance && (
                 <div className="shrink-0 text-right">
                   <p className="text-[10px] text-white/25">≈ USD</p>
-                  <p className="text-sm font-bold text-white/50 font-mono">{formatCurrency(outputUsd)}</p>
+                  <p className="text-sm font-bold text-white/50 font-mono">${expectedUsd.toFixed(2)}</p>
                   <div className="mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase inline-block"
-                    style={{ background: isETR ? "rgba(249,115,22,0.15)" : "rgba(38,161,123,0.15)", color: isETR ? "#f97316" : "#26a17b" }}>
-                    {isETR ? "3.5×" : "2.5×"}
+                    style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}>
+                    3.5×
                   </div>
                 </div>
               )}
@@ -197,7 +202,10 @@ export default function Convert() {
           </div>
 
           {/* Submit */}
-          <button type="submit" disabled={isPending || numAmount <= 0 || numAmount > gemBalance}
+          <motion.button
+            type="submit"
+            disabled={isPending || numAmount <= 0 || numAmount > gemBalance}
+            whileTap={{ scale: 0.98 }}
             className="w-full relative py-4 rounded-2xl font-bold text-[15px] text-white overflow-hidden transition-all disabled:opacity-35 disabled:cursor-not-allowed"
             style={{
               background: numAmount > 0 && numAmount <= gemBalance
@@ -206,8 +214,16 @@ export default function Convert() {
               border: numAmount > 0 && numAmount <= gemBalance ? "none" : "1px solid rgba(255,255,255,0.07)",
               boxShadow: numAmount > 0 && numAmount <= gemBalance ? "0 6px 24px rgba(249,115,22,0.35)" : "none",
             }}>
-            {isPending ? "Converting…" : `Convert ${numAmount > 0 ? formatGems(numAmount) : ""} Gems → ${outputLabel}`}
-          </button>
+            {numAmount > 0 && numAmount <= gemBalance && !isPending && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut", repeatDelay: 2 }}
+                style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)", width: "50%" }}
+              />
+            )}
+            {isPending ? "Converting…" : numAmount > 0 ? `Convert ${formatGems(numAmount)} Gems → PTC` : "Enter Gem Amount"}
+          </motion.button>
         </form>
       </motion.div>
 
@@ -222,9 +238,9 @@ export default function Convert() {
           </div>
           <div className="space-y-2">
             {[
-              { icon: <GemIcon size={14} />, label: "Gems per ETR", value: formatGems(stats.conversionRateGemsPerEtr), mono: true },
-              { icon: <img src={ETR_LOGO} alt="ETR" className="w-4 h-4 rounded-full" />, label: "ETR → USD", value: "$3.50", accent: "#f97316" },
-              { icon: <img src={USDT_LOGO} alt="USDT" className="w-4 h-4 rounded-full" />, label: "Direct USDT rate", value: "2.5×", accent: "#26a17b" },
+              { icon: <GemIcon size={14} />, label: "Gems per PTC", value: formatGems(stats.conversionRateGemsPerEtr), mono: true },
+              { icon: <img src={PTC_LOGO} alt="PTC" className="w-4 h-4 rounded-full" />, label: "PTC → USD", value: "$3.50", accent: "#f97316" },
+              { icon: <TrendingUp size={14} style={{ color: "#f97316" }} />, label: "Conversion Multiplier", value: "3.5×", accent: "#f97316" },
             ].map((row, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -241,7 +257,7 @@ export default function Convert() {
               style={{ background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)" }}>
               <Zap size={11} style={{ color: "#f97316", flexShrink: 0 }} />
               <p className="text-[11px] font-semibold" style={{ color: "rgba(249,115,22,0.8)" }}>
-                Dynamic Halving Active — rate changes with volume
+                Dynamic Halving Active — rate increases with volume
               </p>
             </div>
           )}
@@ -274,8 +290,8 @@ export default function Convert() {
               <div className="px-4 pb-4 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 {isLoadingHistory ? (
                   <div className="py-8 flex justify-center">
-                    <div className="w-5 h-5 rounded-full border-2 border-t-orange-500 animate-spin"
-                      style={{ borderColor: "rgba(249,115,22,0.2)", borderTopColor: "#f97316" }} />
+                    <div className="w-5 h-5 rounded-full animate-spin"
+                      style={{ border: "2px solid rgba(249,115,22,0.2)", borderTopColor: "#f97316" }} />
                   </div>
                 ) : !conversions?.length ? (
                   <div className="py-10 text-center">
@@ -284,6 +300,7 @@ export default function Convert() {
                       <GemIcon size={22} />
                     </div>
                     <p className="text-sm font-semibold text-white/25">No conversions yet</p>
+                    <p className="text-xs text-white/15 mt-1">Convert your gems to PTC above</p>
                   </div>
                 ) : (
                   <div className="space-y-2 mt-3">
@@ -298,13 +315,17 @@ export default function Convert() {
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold text-red-400">−{formatGems(c.gemsSpent)}</span>
                             <ArrowRight size={9} className="text-white/25" />
-                            <span className={cn("text-xs font-bold", c.outputType === "usdt" ? "text-emerald-400" : "text-orange-400")}>
-                              +{c.outputType === "usdt" ? formatCurrency(c.outputAmount) : `${c.outputAmount} ETR`}
+                            <span className="text-xs font-bold text-orange-400">
+                              +{c.outputAmount.toFixed(4)} PTC
                             </span>
                           </div>
                           <p className="text-[10px] text-white/25 mt-0.5 font-mono">
                             {format(new Date(c.createdAt), "MMM d · HH:mm")}
                           </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-white/25">≈ USD</p>
+                          <p className="text-xs font-bold font-mono text-white/40">${(c.outputAmount * 3.5).toFixed(2)}</p>
                         </div>
                       </div>
                     ))}

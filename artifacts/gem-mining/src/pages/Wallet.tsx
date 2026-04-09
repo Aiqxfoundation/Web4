@@ -7,7 +7,7 @@ import { formatCurrency, formatGems, cn } from "@/lib/utils";
 import { ChevronRight, ShieldCheck, ArrowRightLeft } from "lucide-react";
 import { GemIcon } from "@/components/GemIcon";
 
-const ETR_LOGO  = "/images/etr-logo.png";
+const PTC_LOGO  = "/images/etr-logo.png";
 const USDT_LOGO = "/images/usdt-logo.png";
 
 function Row({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
@@ -92,15 +92,15 @@ export default function Wallet() {
 
         <div className="mx-5 h-px bg-white/[0.05]" />
 
-        {/* ETR */}
+        {/* PTC */}
         <Row onClick={() => navigate("/wallet/etr")}>
-          <img src={ETR_LOGO} alt="ETR" className="w-10 h-10 rounded-full shrink-0" />
+          <img src={PTC_LOGO} alt="PTC" className="w-10 h-10 rounded-full shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white">ETR Token</p>
-            <p className="text-xs text-white/35">ETR · BSC Chain</p>
+            <p className="text-sm font-semibold text-white">PTC Token</p>
+            <p className="text-xs text-white/35">PTC · BEP-20</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-sm font-bold text-white font-mono">{etrBalance.toFixed(4)} ETR</p>
+            <p className="text-sm font-bold text-white font-mono">{etrBalance.toFixed(4)} PTC</p>
             <p className="text-xs text-white/30 font-mono">≈ {formatCurrency(etrBalance * 3.5)}</p>
           </div>
           <ChevronRight size={15} className="text-white/20 shrink-0" />
@@ -141,7 +141,7 @@ export default function Wallet() {
             </div>
             <div className="text-left">
               <p className="text-sm font-semibold text-white">Convert Gems</p>
-              <p className="text-xs text-white/35">Gems → ETR or USDT · Open to all</p>
+              <p className="text-xs text-white/35">Gems → PTC · Open to all</p>
             </div>
           </div>
           <ChevronRight size={15} className="text-white/25" />
@@ -165,10 +165,10 @@ export default function Wallet() {
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-white">Mint Verification Badge</p>
-                <p className="text-xs text-white/35">Unlock USDT withdrawals & ETR transfers</p>
+                <p className="text-xs text-white/35">Unlock USDT withdrawals & PTC transfers</p>
               </div>
             </div>
-            <span className="text-xs font-bold text-primary shrink-0">20 ETR</span>
+            <span className="text-xs font-bold text-primary shrink-0">20 PTC</span>
           </button>
         </motion.div>
       )}
