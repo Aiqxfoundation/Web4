@@ -6,7 +6,6 @@ import { requireAuth } from "../lib/auth.js";
 const router = Router();
 
 const WITHDRAWAL_ETR_FEE = 0.1;
-const MINING_REQUIRED_HOURS = 24;
 
 // GET /withdrawals — user's own withdrawal history
 router.get("/", requireAuth, async (req, res) => {
@@ -61,27 +60,6 @@ router.post("/", requireAuth, async (req, res) => {
       res.status(403).json({
         error: "USDT withdrawals are only available to verified miners. Mint your Verification Badge (20 ETR) to unlock withdrawals.",
         code: "VERIFICATION_REQUIRED",
-      });
-      return;
-    }
-
-    // Check 24-hour mining requirement
-    if (!user.miningStartedAt) {
-      res.status(403).json({
-        error: "You must start mining before you can withdraw.",
-        code: "MINING_NOT_STARTED",
-      });
-      return;
-    }
-
-    const hoursSinceMiningStart =
-      (Date.now() - new Date(user.miningStartedAt).getTime()) / (1000 * 60 * 60);
-
-    if (hoursSinceMiningStart < MINING_REQUIRED_HOURS) {
-      const hoursLeft = Math.ceil(MINING_REQUIRED_HOURS - hoursSinceMiningStart);
-      res.status(403).json({
-        error: `Withdrawals unlock after 24 hours of active mining. Please wait ${hoursLeft} more hour${hoursLeft !== 1 ? "s" : ""}.`,
-        code: "MINING_24H_REQUIRED",
       });
       return;
     }

@@ -643,51 +643,25 @@ export default function Mining() {
         )}
       </AnimatePresence>
 
-      {/* ── Claim Button (shown only when mining is active) ── */}
+      {/* ── Status indicator while mining is active (no claim during session) ── */}
       <AnimatePresence>
-        {!sessionEnded && (
+        {isMiningActive && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: 0.07 }}>
-            <motion.button
-              onClick={handleClaim}
-              disabled={isPending || stoppedAndEmpty || !hasPending}
-              whileTap={{ scale: 0.98 }}
-              animate={claimFlash ? { scale: [1, 1.04, 1] } : {}}
-              transition={{ duration: 0.22 }}
-              className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide overflow-hidden transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={
-                hasPending && isMiningActive
-                  ? {
-                      background: "linear-gradient(135deg, #ea6c10 0%, #f97316 50%, #fb923c 100%)",
-                      boxShadow: "0 6px 24px rgba(249,115,22,0.4), 0 1px 0 rgba(255,255,255,0.2) inset",
-                      color: "#fff",
-                    }
-                  : {
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      color: "rgba(255,255,255,0.22)",
-                    }
-              }
+            <div
+              className="w-full relative flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] tracking-wide cursor-not-allowed select-none"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                color: "rgba(255,255,255,0.25)",
+              }}
             >
-              {hasPending && isMiningActive && !isPending && (
-                <motion.div
-                  className="absolute inset-0 pointer-events-none"
-                  animate={{ x: ["-100%", "200%"] }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut", repeatDelay: 2 }}
-                  style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)", width: "50%" }}
-                />
-              )}
-              {isPending ? (
-                <>
-                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                    style={{ width: 16, height: 16, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
-                  Processing…
-                </>
-              ) : hasPending && isMiningActive ? (
-                <><GemIcon size={16} /> Claim {formatGems(liveGems)} Gems</>
-              ) : (
-                <><Pickaxe size={16} /> Mining in Progress…</>
-              )}
-            </motion.button>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                style={{ width: 15, height: 15, borderRadius: "50%", border: "2px solid rgba(249,115,22,0.25)", borderTopColor: "rgba(249,115,22,0.6)" }}
+              />
+              Mining in Progress — Claim available after session ends
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

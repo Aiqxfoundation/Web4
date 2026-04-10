@@ -166,6 +166,23 @@ router.post("/claim", requireAuth, async (req, res) => {
     const { totalMiningPower } = await getUserLevelData(user.id);
     const currentLevel: number = user.currentLevel ?? 0;
 
+    // Enforce: session must have ended before claiming
+    const sessionDurationMs = getSessionDurationMs(currentLevel);
+    const sessionStartedAt  = user.lastClaimedAt ?? user.miningStartedAt;
+    const sessionExpiresAt  = new Date(sessionStartedAt.getTime() + sessionDurationMs);
+    const now               = new Date();
+    if (now < sessionExpiresAt) {
+      const msLeft = sessionExpiresAt.getTime() - now.getTime();
+      const hLeft  = Math.floor(msLeft / 3_600_000);
+      const mLeft  = Math.floor((msLeft % 3_600_000) / 60_000);
+      const sLeft  = Math.floor((msLeft % 60_000) / 1_000);
+      res.status(400).json({
+        error: `Mining session is still active. Claim available in ${hLeft}h ${mLeft}m ${sLeft}s.`,
+        code: "SESSION_STILL_ACTIVE",
+      });
+      return;
+    }
+
     const pendingGems = calculatePendingGems(
       currentLevel,
       totalMiningPower,
@@ -180,7 +197,6 @@ router.post("/claim", requireAuth, async (req, res) => {
 
     const claimedGems = Math.floor(pendingGems);
     const newBalance = user.gemsBalance + claimedGems;
-    const now = new Date();
 
     await db
       .update(usersTable)
