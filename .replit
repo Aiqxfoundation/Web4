@@ -64,4 +64,4 @@ externalPort = 80
 [userenv]
 
 [userenv.shared]
-ALLOWED_ORIGIN = "https://37424a11-24c1-47ed-8872-793906333380-00-2unhxfaz54b13.kirk.replit.dev"
+ALLOWED_ORIGIN = "https://11393623-a55e-4347-8641-0f250f7d0ef6-00-kwj4i10ap0ss.worf.replit.dev"
