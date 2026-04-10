@@ -37,7 +37,7 @@ const INFO_CONTENT: Record<string, { title: string; content: React.ReactNode }> 
     content: (
       <div className="space-y-4 text-sm text-white/60 leading-relaxed">
         <p>
-          <span className="text-white font-semibold">Peridot Mining</span> is a next-generation decentralised gem mining ecosystem. Our platform connects yield-generating digital assets with community-powered blockchain utility.
+          <span className="text-white font-semibold">Peridot Mining</span> is a next-generation decentralised gem mining ecosystem. Our platform connects yield-generating digital assets with community-powered token rewards.
         </p>
         <p>
           Users deposit USDT, mine Peridot Gems over configurable sessions, and convert their accumulated Gems into PTC tokens — the native utility token of the Peridot ecosystem. The more you invest, the higher your mining level and the faster your gems accumulate.

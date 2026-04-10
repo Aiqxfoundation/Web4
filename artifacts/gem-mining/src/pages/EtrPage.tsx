@@ -186,7 +186,7 @@ export default function EtrPage() {
           <img src={PTC_LOGO} alt="PTC" className="w-7 h-7 rounded-full" />
           <div>
             <p className="text-sm font-bold text-white leading-tight">PTC Token</p>
-            <p className="text-[10px] text-white/35">PTC · BEP-20</p>
+            <p className="text-[10px] text-white/35">Peridot Token</p>
           </div>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function EtrPage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <p className="text-xs text-white/35 uppercase tracking-widest mb-2 font-semibold">Balance</p>
           <p className="text-4xl font-black text-white tracking-tight">{etrBalance.toFixed(4)}</p>
-          <p className="text-xs text-white/30 mt-1">PTC Token · ≈ ${(etrBalance * 3.5).toFixed(2)} USD</p>
+          <p className="text-xs text-white/30 mt-1">PTC Token</p>
         </motion.div>
 
         {/* Actions */}

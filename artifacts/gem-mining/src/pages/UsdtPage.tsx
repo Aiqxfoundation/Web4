@@ -132,8 +132,8 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
       <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-white/[0.04] border border-white/[0.07]">
         <AlertCircle size={13} className="text-white/40 shrink-0" />
         <p className="text-xs text-white/50">
-          Processing fee: <span className="text-white font-semibold">0.1 ETR</span>
-          {" "}· Balance: {etrBalance.toFixed(4)} ETR
+          Processing fee: <span className="text-white font-semibold">0.1 PTC</span>
+          {" "}· Balance: {etrBalance.toFixed(4)} PTC
           {!hasFee && <span className="text-primary"> (insufficient)</span>}
         </p>
       </div>
@@ -154,7 +154,7 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
       </div>
 
       <div>
-        <label className="text-xs text-white/45 font-medium mb-2 block">Destination Address (BSC)</label>
+        <label className="text-xs text-white/45 font-medium mb-2 block">Destination Address</label>
         <input
           value={address} onChange={e => setAddress(e.target.value)} required placeholder="0x..."
           className="w-full bg-white/[0.05] border border-white/[0.09] rounded-xl px-4 py-3.5 text-white text-sm font-mono placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors"
@@ -162,7 +162,7 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
       </div>
 
       <p className="text-xs text-white/30 leading-relaxed">
-        Withdrawals are irreversible once approved. Double-check your address. BEP-20 only.
+        Withdrawals are irreversible once approved. Double-check your address before submitting.
       </p>
 
       <button type="submit" disabled={isPending || !hasFee}
@@ -236,7 +236,7 @@ export default function UsdtPage() {
           <img src={USDT_LOGO} alt="USDT" className="w-7 h-7 rounded-full" />
           <div>
             <p className="text-sm font-bold text-white leading-tight">Tether USD</p>
-            <p className="text-[10px] text-white/35">USDT · BEP-20</p>
+            <p className="text-[10px] text-white/35">USDT</p>
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ const COST = 20;
 
 const BENEFITS = [
   "USDT withdrawals unlocked",
-  "ETR transfers to other users",
+  "PTC transfers to other users",
   "Verified badge on your profile",
   "Priority withdrawal processing",
 ];
@@ -140,15 +140,15 @@ export default function Verify() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/50">One-time fee</span>
                 <div className="flex items-center gap-2">
-                  <img src={ETR_LOGO} alt="ETR" className="w-5 h-5 rounded-full" />
-                  <span className="text-lg font-black text-white">{COST} ETR</span>
+                  <img src={ETR_LOGO} alt="PTC" className="w-5 h-5 rounded-full" />
+                  <span className="text-lg font-black text-white">{COST} PTC</span>
                 </div>
               </div>
               <div className="h-px bg-white/[0.06]" />
               <div className="flex items-center justify-between">
                 <span className="text-sm text-white/40">Your balance</span>
                 <span className={`text-sm font-bold ${canAfford ? "text-white" : "text-white/40"}`}>
-                  {etrBalance.toFixed(4)} ETR
+                  {etrBalance.toFixed(4)} PTC
                   {canAfford && <span className="text-primary ml-2">✓</span>}
                 </span>
               </div>
@@ -157,8 +157,8 @@ export default function Verify() {
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mt-1">
                   <AlertCircle size={13} className="text-white/30 shrink-0 mt-0.5" />
                   <p className="text-xs text-white/40 leading-relaxed">
-                    You need {(COST - etrBalance).toFixed(4)} more ETR.
-                    Convert your Gems on the <button onClick={() => navigate("/convert")} className="text-primary underline">Convert page</button> to earn ETR.
+                    You need {(COST - etrBalance).toFixed(4)} more PTC.
+                    Convert your Gems on the <button onClick={() => navigate("/convert")} className="text-primary underline">Convert page</button> to earn PTC.
                   </p>
                 </div>
               )}
@@ -171,13 +171,13 @@ export default function Verify() {
                 disabled={!canAfford}
                 className="w-full py-4 rounded-xl bg-primary text-black font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-105 transition-all"
               >
-                Mint Verification Badge — {COST} ETR
+                Mint Verification Badge — {COST} PTC
               </button>
             ) : (
               <div className="space-y-3">
                 <div className="rounded-xl p-4 bg-white/[0.04] border border-white/[0.08] text-center">
                   <p className="text-sm text-white/70 leading-relaxed">
-                    Confirm deduction of <strong className="text-white">{COST} ETR</strong> from your balance to mint the Verification Badge?
+                    Confirm deduction of <strong className="text-white">{COST} PTC</strong> from your balance to mint the Verification Badge?
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">

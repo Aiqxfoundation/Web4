@@ -148,7 +148,7 @@ export default function DepositFlow() {
           <img src={USDT_LOGO} alt="USDT" className="w-7 h-7 rounded-full" />
           <div>
             <p className="text-sm font-bold text-white leading-tight">Deposit USDT</p>
-            <p className="text-[10px] text-white/35">BEP-20 · BNB Smart Chain</p>
+            <p className="text-[10px] text-white/35">Secure USDT Deposit</p>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function DepositFlow() {
               <div>
                 <p className="font-bold text-white">Get Deposit Address</p>
                 <p className="text-sm text-white/45 mt-1 leading-relaxed max-w-64 mx-auto">
-                  Generate a unique BSC address to receive your USDT. Valid for 2 hours.
+                  Generate a unique deposit address to receive your USDT. Valid for 2 hours.
                 </p>
               </div>
               <button
@@ -183,7 +183,7 @@ export default function DepositFlow() {
             <div className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               <AlertCircle size={14} className="text-white/30 shrink-0 mt-0.5" />
               <p className="text-xs text-white/40 leading-relaxed">
-                Send <strong className="text-white/60">USDT BEP-20 only</strong>. Wrong network = permanent loss.
+                Send <strong className="text-white/60">USDT only</strong> to the provided address.
                 Minimum $10 USDT. Admin reviews within ~2 hours.
               </p>
             </div>
@@ -313,7 +313,7 @@ export default function DepositFlow() {
                 <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <AlertCircle size={13} className="text-white/30 shrink-0 mt-0.5" />
                   <p className="text-xs text-white/40 leading-relaxed">
-                    Send <strong className="text-white/60">USDT BEP-20 only</strong>. Wrong network = permanent loss.
+                    Send <strong className="text-white/60">USDT only</strong> to the provided address.
                     Admin approves within ~2 hours.
                   </p>
                 </div>

@@ -96,7 +96,7 @@ function AdminStats() {
       <StatCard title="Banned Users" value={stats.bannedUsers} icon={<UserX size={20} />} color="text-red-500" />
       <StatCard title="Total Gems Mined" value={formatGems(stats.totalGemsMined)} icon={<Gem size={20} />} color="text-primary" />
       <StatCard title="USDT Deposited" value={formatCurrency(stats.totalDepositsUsdt)} icon={<DollarSign size={20} />} color="text-emerald-500" />
-      <StatCard title="ETR Converted" value={formatGems(stats.totalEtrConverted)} icon={<Repeat size={20} />} />
+      <StatCard title="PTC Converted" value={formatGems(stats.totalEtrConverted)} icon={<Repeat size={20} />} />
       <StatCard
         title="Pending Deposits"
         value={stats.pendingDeposits}
@@ -199,7 +199,7 @@ function AdminUsers() {
                         <span className="text-foreground font-mono">{formatGems(u.gemsBalance)}</span>
                       </span>
                       <span className="flex justify-between gap-4">
-                        <span className="text-muted-foreground">ETR:</span>
+                        <span className="text-muted-foreground">PTC:</span>
                         <span className="text-amber-400 font-mono">{u.etrBalance.toFixed(4)}</span>
                       </span>
                       <span className="flex justify-between gap-4">
@@ -518,7 +518,7 @@ function AdminWithdrawals() {
                   {w.currency === "usdt" ? (
                     <span className="text-emerald-500">{formatCurrency(w.amount)}</span>
                   ) : (
-                    <span className="text-amber-400">{w.amount.toFixed(4)} ETR</span>
+                    <span className="text-amber-400">{w.amount.toFixed(4)} PTC</span>
                   )}
                 </td>
                 <td className="p-4 font-mono text-xs max-w-[180px] truncate text-muted-foreground" title={w.walletAddress}>
@@ -586,7 +586,7 @@ function AdminAddresses() {
     if (!newAddress.trim()) { toast.error("Address is required"); return; }
 
     addAddress(
-      { address: newAddress.trim(), label: newLabel.trim(), network: "BSC (BEP-20)" },
+      { address: newAddress.trim(), label: newLabel.trim(), network: "Peridot Network" },
       {
         onSuccess: () => {
           toast.success("Address added");
@@ -653,11 +653,11 @@ function AdminAddresses() {
       {/* Add New Address */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Plus size={18} className="text-primary" /> Add New BSC Deposit Address
+          <Plus size={18} className="text-primary" /> Add New Deposit Address
         </h2>
         <form onSubmit={handleAdd} className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[260px]">
-            <Label>BSC Address (0x...)</Label>
+            <Label>Deposit Address (0x...)</Label>
             <Input
               value={newAddress}
               onChange={(e) => setNewAddress(e.target.value)}
@@ -691,7 +691,7 @@ function AdminAddresses() {
         </div>
         {!addresses?.length ? (
           <p className="text-muted-foreground py-12 text-center text-sm">
-            No addresses configured. Add your first BSC address above.
+            No addresses configured. Add your first deposit address above.
           </p>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">

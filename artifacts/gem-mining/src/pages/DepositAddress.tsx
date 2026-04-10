@@ -116,7 +116,7 @@ export default function DepositAddress() {
         </button>
         <div>
           <h1 className="text-xl font-bold text-white">Deposit Address</h1>
-          <p className="text-xs text-white/40">Generate your BSC deposit address</p>
+          <p className="text-xs text-white/40">Generate your deposit address</p>
         </div>
       </div>
 
@@ -125,11 +125,11 @@ export default function DepositAddress() {
         style={{ background: "rgba(38,161,123,0.1)", border: "1px solid rgba(38,161,123,0.2)" }}>
         <img src={USDT_LOGO} alt="USDT" className="w-10 h-10 rounded-full" />
         <div className="flex-1">
-          <p className="text-sm font-bold text-white">USDT — BNB Smart Chain</p>
-          <p className="text-xs text-white/50">BEP-20 Network Only · Minimum $10 USDT</p>
+          <p className="text-sm font-bold text-white">Tether USD</p>
+          <p className="text-xs text-white/50">USDT Deposit · Minimum $10</p>
         </div>
         <span className="text-[10px] font-bold text-[#26a17b] bg-[#26a17b]/15 border border-[#26a17b]/25 px-2.5 py-1 rounded-full">
-          BSC
+          USDT
         </span>
       </div>
 
@@ -149,7 +149,7 @@ export default function DepositAddress() {
           </div>
           <h3 className="text-lg font-bold text-white mb-2">Get Your Deposit Address</h3>
           <p className="text-sm text-white/45 mb-6 leading-relaxed max-w-64 mx-auto">
-            Generate a unique BSC address to receive your USDT deposit. The address is valid for 2 hours.
+            Generate a unique deposit address to receive your USDT. The address is valid for 2 hours.
           </p>
           <button
             onClick={handleGenerate}
@@ -195,7 +195,7 @@ export default function DepositAddress() {
             {/* Address */}
             <div className="px-5 pb-4">
               <div className="bg-black/30 rounded-2xl p-4 border border-[#26a17b]/15">
-                <p className="text-xs text-white/40 mb-2 font-medium">Your BSC Deposit Address</p>
+                <p className="text-xs text-white/40 mb-2 font-medium">Your Deposit Address</p>
                 <code className="text-sm font-mono text-[#26a17b] break-all leading-relaxed block">
                   {stored.address}
                 </code>
@@ -247,7 +247,7 @@ export default function DepositAddress() {
             <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
             <div className="text-xs text-amber-400/90 space-y-1">
               <p className="font-semibold">Important Instructions</p>
-              <p>Send <strong>USDT BEP-20 only</strong>. Wrong network = permanent loss.</p>
+              <p>Send <strong>USDT only</strong> to the provided address. Double-check before sending.</p>
               <p>Minimum deposit: <strong>$10 USDT</strong>. Admin approves within ~2 hours.</p>
             </div>
           </div>

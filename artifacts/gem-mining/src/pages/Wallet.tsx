@@ -30,7 +30,7 @@ export default function Wallet() {
   const usdtBalance = wallet?.usdtBalance ?? 0;
   const etrBalance  = wallet?.etrBalance ?? 0;
   const isVerified  = (wallet as any)?.isVerified ?? false;
-  const totalUsd    = usdtBalance + etrBalance * 3.5;
+  const totalUsd    = usdtBalance;
 
   if (isLoading) {
     return (
@@ -63,7 +63,7 @@ export default function Wallet() {
           )}
         </div>
         <p className="text-4xl font-black text-white tracking-tight">{formatCurrency(totalUsd)}</p>
-        <p className="text-xs text-white/30 mt-1">Total portfolio value</p>
+        <p className="text-xs text-white/30 mt-1">USDT Balance</p>
       </motion.div>
 
       {/* ── Assets ── */}
@@ -81,7 +81,7 @@ export default function Wallet() {
           <img src={USDT_LOGO} alt="USDT" className="w-10 h-10 rounded-full shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white">Tether USD</p>
-            <p className="text-xs text-white/35">USDT · BEP-20</p>
+            <p className="text-xs text-white/35">USDT</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-sm font-bold text-white font-mono">{formatCurrency(usdtBalance)}</p>
@@ -97,11 +97,10 @@ export default function Wallet() {
           <img src={PTC_LOGO} alt="PTC" className="w-10 h-10 rounded-full shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white">PTC Token</p>
-            <p className="text-xs text-white/35">PTC · BEP-20</p>
+            <p className="text-xs text-white/35">Peridot Token</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-sm font-bold text-white font-mono">{etrBalance.toFixed(4)} PTC</p>
-            <p className="text-xs text-white/30 font-mono">≈ {formatCurrency(etrBalance * 3.5)}</p>
           </div>
           <ChevronRight size={15} className="text-white/20 shrink-0" />
         </Row>

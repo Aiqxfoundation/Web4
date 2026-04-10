@@ -226,7 +226,7 @@ export default function Receive() {
           <div className="flex gap-2.5 p-4 bg-amber-500/8 border border-amber-500/20 rounded-2xl">
             <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-400/90 leading-relaxed">
-              Send <strong>USDT BEP-20 only</strong> to the assigned address. Wrong network = permanent loss.
+              Send <strong>USDT only</strong> to the assigned address. Double-check before sending.
               Admin review takes ~2 hours.
             </p>
           </div>
