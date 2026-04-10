@@ -796,6 +796,52 @@ function AdminAddresses() {
   );
 }
 
+// ─── Confirm Dialog ──────────────────────────────────────────────────────────
+
+function ConfirmDialog({ title, message, confirmLabel = "Delete", onConfirm, onCancel }: {
+  title: string; message: string; confirmLabel?: string;
+  onConfirm: () => void; onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+      onClick={onCancel}>
+      <div
+        className="w-full max-w-sm mx-4 rounded-3xl p-6 space-y-5"
+        style={{
+          background: "linear-gradient(160deg, #0d0e15 0%, #111320 100%)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
+            <Trash2 size={16} style={{ color: "#ef4444" }} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">{title}</p>
+            <p className="text-xs leading-relaxed mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>{message}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={onCancel}
+            className="py-2.5 rounded-2xl text-sm font-bold transition-colors"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>
+            Cancel
+          </button>
+          <button onClick={onConfirm}
+            className="py-2.5 rounded-2xl text-sm font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #dc2626, #ef4444)", boxShadow: "0 4px 16px rgba(239,68,68,0.3)" }}>
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Shared ──────────────────────────────────────────────────────────────────
 
 function LoadingText() {

@@ -514,17 +514,6 @@ export default function Mining() {
   return (
     <div className="max-w-md mx-auto px-4 py-5 pb-28 md:pb-8 space-y-3">
 
-      {/* ══ SESSION COMPLETE BANNER — shown prominently when session ends ══ */}
-      <AnimatePresence>
-        {sessionEnded && (
-          <SessionCompleteBanner
-            liveGems={liveGems}
-            isPending={isPending}
-            onClaim={handleClaim}
-          />
-        )}
-      </AnimatePresence>
-
       {/* ════════ HERO CARD ════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -594,7 +583,7 @@ export default function Mining() {
                   className="text-[11px] font-semibold"
                   style={{ color: "rgba(74,222,128,0.8)" }}
                 >
-                  Session complete — claim above to restart
+                  Session complete — claim below to restart
                 </motion.span>
               ) : (
                 <span className="text-[11px] text-white/18">
@@ -645,7 +634,18 @@ export default function Mining() {
         </div>
       </motion.div>
 
-      {/* ── Claim Button (shown only when mining active or no pending gems) ── */}
+      {/* ══ SESSION COMPLETE BANNER — shown below the hero card ══ */}
+      <AnimatePresence>
+        {sessionEnded && (
+          <SessionCompleteBanner
+            liveGems={liveGems}
+            isPending={isPending}
+            onClaim={handleClaim}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Claim Button (shown only when mining is active) ── */}
       <AnimatePresence>
         {!sessionEnded && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: 0.07 }}>
