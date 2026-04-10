@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLogin, useSignup, useRecoverPassword } from "@workspace/api-client-react";
 import { Button, Input, Card, Label } from "@/components/ui";
@@ -32,24 +32,24 @@ export default function Auth({ mode: initialMode }: { mode: 'login' | 'signup' |
         queryClient.invalidateQueries();
         setLocation('/dashboard');
       },
-      onError: (err: any) => toast.error(err.error || "Login failed")
+      onError: (err: any) => notify.error("Login Failed", err.error || "Invalid username or password. Please try again.")
     });
   };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match");
+      notify.error("Passwords Do Not Match", "Please make sure both password fields are identical.");
       return;
     }
     signup({ data: form }, {
       onSuccess: (res) => {
         localStorage.setItem('etr_token', res.token);
         queryClient.invalidateQueries();
-        toast.success("Account created successfully!");
+        notify.accountCreated();
         setLocation('/dashboard');
       },
-      onError: (err: any) => toast.error(err.error || "Signup failed")
+      onError: (err: any) => notify.error("Sign Up Failed", err.error || "Could not create account. Please try again.")
     });
   };
 
@@ -57,10 +57,10 @@ export default function Auth({ mode: initialMode }: { mode: 'login' | 'signup' |
     e.preventDefault();
     recover({ data: { username: form.username, recoveryAnswer: form.recoveryAnswer, newPassword: form.newPassword } }, {
       onSuccess: () => {
-        toast.success("Password recovered successfully! Please login.");
+        notify.passwordRecovered();
         setMode('login');
       },
-      onError: (err: any) => toast.error(err.error || "Recovery failed")
+      onError: (err: any) => notify.error("Recovery Failed", err.error || "Could not reset your password. Check your answer and try again.")
     });
   };
 

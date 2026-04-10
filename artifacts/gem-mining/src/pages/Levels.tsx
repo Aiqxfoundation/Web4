@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import {
   useGetLevels,
   useInvestInLevel,
@@ -73,16 +73,16 @@ function InvestModal({
   const accent    = LEVEL_ACCENTS[newLevel] ?? LEVEL_ACCENTS[0];
 
   const handleInvest = () => {
-    if (!numAmount || numAmount <= 0) { toast.error("Enter a valid USDT amount"); return; }
-    if (currentLevel === 0 && numAmount < 100) { toast.error("Minimum $100 USDT to start mining"); return; }
-    if (numAmount > usdtBalance) { toast.error("Insufficient USDT balance"); return; }
+    if (!numAmount || numAmount <= 0) { notify.error("Invalid Amount", "Please enter a valid USDT investment amount."); return; }
+    if (currentLevel === 0 && numAmount < 100) { notify.error("Minimum Investment", "A minimum of $100 USDT is required to start mining."); return; }
+    if (numAmount > usdtBalance) { notify.error("Insufficient Balance", "You don't have enough USDT to cover this investment."); return; }
     investInLevel({ additionalUsdt: numAmount }, {
       onSuccess: (res: { message: string }) => {
-        toast.success(res.message);
+        notify.investSuccess(res.message);
         setAmount(""); onClose();
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err?.data?.error || "Failed to invest"),
+      onError: (err: any) => notify.error("Investment Failed", err?.data?.error || "Could not process your investment. Please try again."),
     });
   };
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { Card, Button, Badge, StatCard, Input, Label } from "@/components/ui";
 import {
   useAdminGetStatsFull,
@@ -132,8 +132,8 @@ function AdminUsers() {
     banUser(
       { userId: id, banned: !current },
       {
-        onSuccess: () => { toast.success("User status updated"); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to update user"),
+        onSuccess: () => { notify.adminUserUpdated(); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Update Failed", err?.data?.error || "Could not update user status."),
       }
     );
   };
@@ -144,17 +144,17 @@ function AdminUsers() {
     if (inputs.gems !== undefined && inputs.gems !== "") data.gemsBalance = Number(inputs.gems);
     if (inputs.etr !== undefined && inputs.etr !== "") data.etrBalance = Number(inputs.etr);
     if (inputs.usdt !== undefined && inputs.usdt !== "") data.usdtBalance = Number(inputs.usdt);
-    if (!Object.keys(data).length) { toast.error("Enter at least one balance value"); return; }
+    if (!Object.keys(data).length) { notify.error("No Values Entered", "Please enter at least one balance value to update."); return; }
 
     adjustBalance(
       { userId: id, ...data },
       {
         onSuccess: () => {
-          toast.success("Balance updated");
+          notify.adminBalanceUpdated();
           setBalanceInputs((prev) => ({ ...prev, [id]: {} }));
           qc.invalidateQueries();
         },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to update balance"),
+        onError: (err: any) => notify.error("Balance Update Failed", err?.data?.error || "Could not update the user's balance."),
       }
     );
   };
@@ -327,8 +327,8 @@ function AdminDeposits() {
     mutator(
       { depositId: id },
       {
-        onSuccess: () => { toast.success(`Deposit ${action}d`); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Action failed"),
+        onSuccess: () => { notify.adminDepositAction(action); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Action Failed", err?.data?.error || "Could not process this deposit."),
       }
     );
   };
@@ -338,8 +338,8 @@ function AdminDeposits() {
     deleteScreenshot(
       { depositId: id },
       {
-        onSuccess: () => { toast.success("Screenshot deleted"); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to delete screenshot"),
+        onSuccess: () => { notify.adminScreenshotDeleted(); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Delete Failed", err?.data?.error || "Could not remove the screenshot."),
       }
     );
   };
@@ -476,8 +476,8 @@ function AdminWithdrawals() {
     mutator(
       { withdrawalId: id },
       {
-        onSuccess: () => { toast.success(`Withdrawal ${action}d`); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Action failed"),
+        onSuccess: () => { notify.adminWithdrawalAction(action); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Action Failed", err?.data?.error || "Could not process this withdrawal."),
       }
     );
   };
@@ -583,18 +583,18 @@ function AdminAddresses() {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAddress.trim()) { toast.error("Address is required"); return; }
+    if (!newAddress.trim()) { notify.error("Address Required", "Please enter a wallet address before saving."); return; }
 
     addAddress(
       { address: newAddress.trim(), label: newLabel.trim(), network: "Peridot Network" },
       {
         onSuccess: () => {
-          toast.success("Address added");
+          notify.adminAddressAdded();
           setNewAddress("");
           setNewLabel("");
           qc.invalidateQueries();
         },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to add address"),
+        onError: (err: any) => notify.error("Add Failed", err?.data?.error || "Could not add the deposit address."),
       }
     );
   };
@@ -616,11 +616,11 @@ function AdminAddresses() {
       { id, address: editAddress.trim(), label: editLabel.trim() },
       {
         onSuccess: () => {
-          toast.success("Address updated");
+          notify.adminAddressUpdated();
           cancelEdit();
           qc.invalidateQueries();
         },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to update address"),
+        onError: (err: any) => notify.error("Update Failed", err?.data?.error || "Could not update the deposit address."),
       }
     );
   };
@@ -629,8 +629,8 @@ function AdminAddresses() {
     updateAddress(
       { id: addr.id, isActive: !addr.isActive },
       {
-        onSuccess: () => { toast.success(addr.isActive ? "Address deactivated" : "Address activated"); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to update"),
+        onSuccess: () => { notify.adminAddressToggled(addr.isActive); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Update Failed", err?.data?.error || "Could not change the address status."),
       }
     );
   };
@@ -640,8 +640,8 @@ function AdminAddresses() {
     deleteAddress(
       { id },
       {
-        onSuccess: () => { toast.success("Address deleted"); qc.invalidateQueries(); },
-        onError: (err: any) => toast.error(err?.data?.error || "Failed to delete"),
+        onSuccess: () => { notify.adminAddressDeleted(); qc.invalidateQueries(); },
+        onError: (err: any) => notify.error("Delete Failed", err?.data?.error || "Could not delete the address."),
       }
     );
   };

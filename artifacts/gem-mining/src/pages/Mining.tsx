@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGetMiningStatus, useClaimGems, useStartMining } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
 import { ChevronRight, TrendingUp, Clock, BarChart3, Pickaxe, Sparkles } from "lucide-react";
@@ -405,28 +405,26 @@ export default function Mining() {
   const handleStartMining = useCallback(() => {
     startMine(undefined, {
       onSuccess: () => {
-        toast.success("Mining started! Peridot Gems will accumulate over your session.");
+        notify.miningStarted();
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err.error || "Could not start mining"),
+      onError: (err: any) => notify.miningError(err.error),
     });
   }, [startMine, queryClient]);
 
   const handleClaim = useCallback(() => {
     if (!status?.pendingGems && liveGems <= 0) {
-      toast.error("No gems to claim yet.");
+      notify.noGemsYet();
       return;
     }
     claim(undefined, {
       onSuccess: (res: any) => {
         setClaimFlash(true);
         setTimeout(() => setClaimFlash(false), 600);
-        toast.success(`Claimed ${formatGems(res.claimedGems)} Peridot Gems — mining restarted!`, {
-          duration: 4000,
-        });
+        notify.gemsClaimed(formatGems(res.claimedGems));
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err.error || err.message || "Claim failed"),
+      onError: (err: any) => notify.claimError(err.error || err.message),
     });
   }, [status, liveGems, claim, queryClient]);
 

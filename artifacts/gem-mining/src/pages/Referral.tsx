@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGetReferrals, useClaimReferralGems } from "@workspace/api-client-react";
 import type { ReferralUser } from "@workspace/api-client-react";
 import { formatGems } from "@/lib/utils";
@@ -208,16 +208,16 @@ export default function Referral() {
     if (!refData) return;
     const link = `${window.location.origin}/signup?ref=${refData.referralCode}`;
     navigator.clipboard.writeText(link);
-    toast.success("Referral link copied to clipboard!");
+    notify.referralCopied();
   };
 
   const handleClaimGems = () => {
     claimGems(undefined, {
       onSuccess: (res) => {
-        toast.success(`Claimed ${formatGems(res.claimedGems)} referral gems!`, { duration: 4000 });
+        notify.referralGemsClaimed(formatGems(res.claimedGems));
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err.error || "Claim failed"),
+      onError: (err: any) => notify.error("Claim Failed", err.error || "Could not claim your referral gems. Please try again."),
     });
   };
 

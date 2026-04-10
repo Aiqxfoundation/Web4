@@ -140,29 +140,11 @@ export default function App() {
         <Router />
       </WouterRouter>
       <Toaster
-        theme="dark"
         position="top-center"
-        gap={8}
+        gap={10}
         toastOptions={{
-          duration: 3500,
-          style: {
-            background: "rgba(13,14,21,0.98)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.9)",
-            borderRadius: "16px",
-            padding: "14px 18px",
-            fontSize: "13px",
-            fontWeight: "500",
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset",
-            maxWidth: "360px",
-          },
-          classNames: {
-            success: "!border-emerald-500/25 !shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(74,222,128,0.12)_inset]",
-            error:   "!border-red-500/25 !shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.12)_inset]",
-            warning: "!border-amber-500/25",
-            info:    "!border-orange-500/25 !shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(249,115,22,0.12)_inset]",
-          },
+          unstyled: true,
+          style: { padding: 0, margin: 0, background: "transparent", border: "none", boxShadow: "none" },
         }}
       />
     </QueryClientProvider>

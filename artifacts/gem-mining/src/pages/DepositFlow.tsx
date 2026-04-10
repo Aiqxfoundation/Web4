@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGenerateDepositAddress, useCreateDepositFull } from "@workspace/api-client-react";
 import {
   ArrowLeft, Copy, Check, RefreshCw, AlertCircle, Clock,
@@ -76,9 +76,9 @@ export default function DepositFlow() {
       const s = save(r.data.address, r.data.label ?? undefined, r.data.network ?? undefined);
       setStored(s);
       setStep("proof");
-      toast.success("Address generated");
+      notify.depositAssigned();
     } else {
-      toast.error("No addresses available — contact support.");
+      notify.error("No Addresses Available", "There are currently no deposit addresses. Please contact support.");
     }
   };
 
@@ -87,7 +87,7 @@ export default function DepositFlow() {
     navigator.clipboard.writeText(stored.address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-    toast.success("Address copied");
+    notify.copied("Wallet Address Copied");
   };
 
   const handleDismiss = () => {
@@ -99,8 +99,8 @@ export default function DepositFlow() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Image files only"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5 MB"); return; }
+    if (!file.type.startsWith("image/")) { notify.error("Invalid File Type", "Please upload an image file (JPG, PNG, etc.)."); return; }
+    if (file.size > 5 * 1024 * 1024) { notify.error("File Too Large", "Screenshot must be under 5 MB. Please compress and try again."); return; }
     const reader = new FileReader();
     reader.onload = ev => {
       const data = ev.target?.result as string;
@@ -112,8 +112,8 @@ export default function DepositFlow() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const n = Number(amount);
-    if (!n || n < 10) { toast.error("Minimum deposit is $10 USDT"); return; }
-    if (!txHash && !screenshot) { toast.error("Provide TX hash or screenshot"); return; }
+    if (!n || n < 10) { notify.error("Minimum Deposit", "The minimum USDT deposit is $10.00."); return; }
+    if (!txHash && !screenshot) { notify.error("Proof Required", "Please provide a transaction hash or payment screenshot."); return; }
     createDeposit(
       {
         amountUsdt: n,
@@ -123,11 +123,11 @@ export default function DepositFlow() {
       },
       {
         onSuccess: () => {
-          toast.success("Deposit submitted — pending admin review");
+          notify.depositSubmitted();
           queryClient.invalidateQueries();
           navigate("/wallet/usdt");
         },
-        onError: (err: any) => toast.error(err?.data?.error || err?.message || "Submission failed"),
+        onError: (err: any) => notify.error("Submission Failed", err?.data?.error || err?.message || "Could not submit your deposit. Please try again."),
       }
     );
   };

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { format } from "date-fns";
 import {
   useGetWallet, useGetDepositsFull, useGetMyWithdrawals, useCreateWithdrawal,
@@ -73,16 +73,16 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const n = Number(amount);
-    if (!n || n < 1) { toast.error("Minimum withdrawal is 1 USDT"); return; }
-    if (n > usdtBalance) { toast.error("Insufficient balance"); return; }
-    if (!address.trim()) { toast.error("Enter wallet address"); return; }
+    if (!n || n < 1) { notify.error("Minimum Withdrawal", "The minimum USDT withdrawal amount is $1.00."); return; }
+    if (n > usdtBalance) { notify.error("Insufficient Balance", "You don't have enough USDT to cover this withdrawal."); return; }
+    if (!address.trim()) { notify.error("Address Required", "Please enter your BSC destination wallet address."); return; }
     withdraw({ data: { currency: "usdt", amount: n, walletAddress: address.trim() } }, {
       onSuccess: () => {
-        toast.success("Withdrawal submitted");
+        notify.withdrawalSubmitted();
         queryClient.invalidateQueries();
         onClose();
       },
-      onError: (err: any) => toast.error(err?.data?.error || err?.message || "Failed"),
+      onError: (err: any) => notify.error("Withdrawal Failed", err?.data?.error || err?.message || "Could not submit your withdrawal. Please try again."),
     });
   };
 

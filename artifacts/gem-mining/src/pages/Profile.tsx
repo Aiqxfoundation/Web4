@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetMe, useGetWallet, useGetReferrals, useApplyReferral, useLogout } from "@workspace/api-client-react";
@@ -13,7 +13,7 @@ function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(text).then(() => { setCopied(true); toast.success("Copied!"); setTimeout(() => setCopied(false), 2000); }); }}
+      onClick={() => { navigator.clipboard.writeText(text).then(() => { setCopied(true); notify.copied(); setTimeout(() => setCopied(false), 2000); }); }}
       className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
       {copied ? <CheckCheck size={12} className="text-emerald-400" /> : <Copy size={12} className="text-white/35" />}
@@ -57,14 +57,14 @@ export default function Profile() {
 
   const handleApplyReferral = () => {
     const code = refCodeInput.trim();
-    if (!code) { toast.error("Please enter a referral code"); return; }
+    if (!code) { notify.error("Code Required", "Please enter a referral code before applying."); return; }
     applyReferral({ referralCode: code }, {
       onSuccess: (res: any) => {
-        toast.success(res.message);
+        notify.referralApplied(res.message);
         setRefCodeInput("");
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err?.data?.error || err?.message || "Failed to apply referral code"),
+      onError: (err: any) => notify.error("Invalid Referral Code", err?.data?.error || err?.message || "Could not apply that referral code."),
     });
   };
 

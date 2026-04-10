@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGetMyConversions, useCreateConversion, useGetSystemStats, useGetWallet } from "@workspace/api-client-react";
 import { formatGems, cn } from "@/lib/utils";
 import { ArrowDown, History, X, BarChart3, Zap, ArrowRight } from "lucide-react";
@@ -27,15 +27,15 @@ export default function Convert() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (numAmount <= 0) { toast.error("Enter a valid amount"); return; }
-    if (numAmount > gemBalance) { toast.error("Insufficient gem balance"); return; }
+    if (numAmount <= 0) { notify.error("Invalid Amount", "Please enter a valid gem amount greater than zero."); return; }
+    if (numAmount > gemBalance) { notify.error("Insufficient Balance", "You don't have enough gems for this conversion."); return; }
     convert({ data: { gemsAmount: numAmount, outputType: "etr" } }, {
       onSuccess: () => {
-        toast.success("Gems converted to PTC successfully!");
+        notify.gemsConverted();
         setAmount("");
         queryClient.invalidateQueries();
       },
-      onError: (err: any) => toast.error(err.error || "Conversion failed"),
+      onError: (err: any) => notify.conversionError(err.error),
     });
   };
 

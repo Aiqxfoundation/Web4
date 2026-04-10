@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { format } from "date-fns";
 import {
   useGetWallet, useGetMyWithdrawals, useTransferEtr,
@@ -82,17 +82,17 @@ function TransferSheet({ etrBalance, isVerified, onClose }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!to.trim()) { toast.error("Enter recipient username"); return; }
+    if (!to.trim()) { notify.error("Recipient Required", "Please enter the username of the person you're sending PTC to."); return; }
     const n = Number(amount);
-    if (!n || n <= 0) { toast.error("Enter valid amount"); return; }
-    if (n > etrBalance) { toast.error("Insufficient PTC balance"); return; }
+    if (!n || n <= 0) { notify.error("Invalid Amount", "Please enter a valid PTC amount greater than zero."); return; }
+    if (n > etrBalance) { notify.error("Insufficient Balance", "You don't have enough PTC to complete this transfer."); return; }
     transfer({ data: { toUsername: to.trim(), amount: n } }, {
       onSuccess: () => {
-        toast.success(`Sent ${amount} PTC to ${to}`);
+        notify.transferSent(amount, to);
         queryClient.invalidateQueries();
         onClose();
       },
-      onError: (err: any) => toast.error(err?.data?.error || err?.error || "Transfer failed"),
+      onError: (err: any) => notify.error("Transfer Failed", err?.data?.error || err?.error || "Could not complete the transfer. Please try again."),
     });
   };
 
@@ -223,7 +223,7 @@ export default function EtrPage() {
 
           {/* Withdraw — always locked until mainnet */}
           <button
-            onClick={() => toast.info("PTC withdrawals will be enabled after mainnet launch.")}
+            onClick={() => notify.info("Coming Soon", "PTC withdrawals will be enabled after the mainnet token launch.")}
             className="flex flex-col items-center gap-2 py-5 rounded-2xl bg-white/[0.05] border border-white/[0.07] text-white/40 font-bold text-sm cursor-default"
           >
             <Lock size={20} />

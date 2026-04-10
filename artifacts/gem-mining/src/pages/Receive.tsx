@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useCreateDepositFull } from "@workspace/api-client-react";
 import {
   ArrowLeft, Upload, X, AlertCircle, Check, Hash, Image as ImageIcon,
@@ -52,8 +52,8 @@ export default function Receive() {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Image files only"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5 MB"); return; }
+    if (!file.type.startsWith("image/")) { notify.error("Invalid File Type", "Please upload an image file (JPG, PNG, etc.)."); return; }
+    if (file.size > 5 * 1024 * 1024) { notify.error("File Too Large", "Screenshot must be under 5 MB. Please compress and try again."); return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const r = ev.target?.result as string;
@@ -66,8 +66,8 @@ export default function Receive() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const n = Number(amount);
-    if (!n || n < 10) { toast.error("Minimum deposit is $10 USDT"); return; }
-    if (!txHash && !screenshotData) { toast.error("Provide TX hash or screenshot"); return; }
+    if (!n || n < 10) { notify.error("Minimum Deposit", "The minimum USDT deposit is $10.00."); return; }
+    if (!txHash && !screenshotData) { notify.error("Proof Required", "Please provide a transaction hash or payment screenshot."); return; }
 
     createDeposit(
       {
@@ -78,11 +78,11 @@ export default function Receive() {
       },
       {
         onSuccess: () => {
-          toast.success("Deposit submitted! Under review by admin.");
+          notify.depositSubmitted();
           queryClient.invalidateQueries();
           navigate("/wallet");
         },
-        onError: (err: any) => toast.error(err?.data?.error || err?.message || "Submission failed"),
+        onError: (err: any) => notify.error("Submission Failed", err?.data?.error || err?.message || "Could not submit your deposit. Please try again."),
       }
     );
   };

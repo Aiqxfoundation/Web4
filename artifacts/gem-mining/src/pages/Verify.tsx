@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGetWallet, useGetMe } from "@workspace/api-client-react";
 import { ArrowLeft, ShieldCheck, Check, ArrowRight, AlertCircle } from "lucide-react";
 
@@ -44,7 +44,7 @@ export default function Verify() {
       setSuccess(true);
       await queryClient.invalidateQueries();
     } catch (err: any) {
-      toast.error(err.message || "Failed to mint badge");
+      notify.badgeMintError(err.message);
     } finally {
       setIsPaying(false);
     }

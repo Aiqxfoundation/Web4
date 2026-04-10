@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { notify } from "@/lib/notify";
 import { useGenerateDepositAddress } from "@workspace/api-client-react";
 import {
   ArrowLeft, Copy, Check, RefreshCw, X, Clock, AlertCircle,
@@ -83,9 +83,9 @@ export default function DepositAddress() {
     if (r.data) {
       const s = saveAddress(r.data.address, r.data.label ?? undefined, r.data.network ?? undefined);
       setStored(s);
-      toast.success("Deposit address assigned!");
+      notify.depositAssigned();
     } else {
-      toast.error("No addresses available. Please contact support.");
+      notify.error("No Addresses Available", "There are currently no deposit addresses. Please contact support.");
     }
   };
 
@@ -93,14 +93,14 @@ export default function DepositAddress() {
     if (!stored?.address) return;
     navigator.clipboard.writeText(stored.address);
     setCopied(true);
-    toast.success("Address copied!");
+    notify.copied("Wallet Address Copied");
     setTimeout(() => setCopied(false), 2500);
   };
 
   const handleDismiss = () => {
     clearAddress();
     setStored(null);
-    toast.success("Address dismissed");
+    notify.depositDismissed();
   };
 
   const pct = stored ? Math.max(0, Math.min(100, (remaining / ADDRESS_TTL_MS) * 100)) : 0;
