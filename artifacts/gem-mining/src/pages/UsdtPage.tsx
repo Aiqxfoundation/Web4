@@ -10,7 +10,7 @@ import {
 import { formatCurrency, cn } from "@/lib/utils";
 import {
   ArrowLeft, ArrowDownLeft, ArrowUpRight, ChevronRight,
-  Lock, ShieldCheck, Clock, AlertCircle, Check, X,
+  Lock, ShieldCheck, AlertCircle, X,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 
@@ -54,9 +54,8 @@ function Sheet({ open, onClose, title, children }: {
 }
 
 // ── Withdraw Sheet ────────────────────────────────────────────────────────────
-function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, onClose }: {
-  usdtBalance: number; etrBalance: number; isVerified: boolean;
-  miningStartedAt: string | null; onClose: () => void;
+function WithdrawSheet({ usdtBalance, etrBalance, isVerified, onClose }: {
+  usdtBalance: number; etrBalance: number; isVerified: boolean; onClose: () => void;
 }) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState("");
@@ -64,10 +63,6 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
   const { mutate: withdraw, isPending } = useCreateWithdrawal();
   const [, navigate] = useLocation();
 
-  const hoursActive = miningStartedAt
-    ? (Date.now() - new Date(miningStartedAt).getTime()) / (1000 * 60 * 60) : 0;
-  const has24h = hoursActive >= 24;
-  const hoursLeft = Math.ceil(Math.max(0, 24 - hoursActive));
   const hasFee = etrBalance >= WITHDRAWAL_ETR_FEE;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,24 +99,6 @@ function WithdrawSheet({ usdtBalance, etrBalance, isVerified, miningStartedAt, o
           className="w-full py-3.5 rounded-xl bg-primary text-black font-bold text-sm">
           Mint Verification Badge
         </button>
-      </div>
-    );
-  }
-
-  if (!has24h) {
-    return (
-      <div className="p-6 space-y-5">
-        <div className="py-6 text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center mx-auto">
-            <Clock size={24} className="text-white/40" />
-          </div>
-          <div>
-            <p className="font-bold text-white">24h Mining Required</p>
-            <p className="text-sm text-white/45 mt-1 leading-relaxed">
-              Withdrawals unlock after 24 hours of active mining. {hoursLeft} hour{hoursLeft !== 1 ? "s" : ""} remaining.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
@@ -214,7 +191,6 @@ export default function UsdtPage() {
   const usdtBalance  = wallet?.usdtBalance ?? 0;
   const etrBalance   = wallet?.etrBalance ?? 0;
   const isVerified   = (wallet as any)?.isVerified ?? false;
-  const miningStart  = (wallet as any)?.miningStartedAt ?? null;
 
   const usdtWithdrawals = (withdrawals ?? []).filter((w: any) => w.currency === "usdt");
   const allTx = [
@@ -330,7 +306,7 @@ export default function UsdtPage() {
       <Sheet open={sheet === "withdraw"} onClose={() => setSheet(null)} title="Withdraw USDT">
         <WithdrawSheet
           usdtBalance={usdtBalance} etrBalance={etrBalance}
-          isVerified={isVerified} miningStartedAt={miningStart}
+          isVerified={isVerified}
           onClose={() => setSheet(null)}
         />
       </Sheet>
